@@ -1,13 +1,16 @@
-import type { LetterboxdExport } from '../lib/letterboxd.ts'
+import type { EnrichResult } from '../lib/enrich.ts'
+import type { Film, LetterboxdExport } from '../lib/letterboxd.ts'
 
 type ExportSummaryProps = {
   data: LetterboxdExport
+  tmdb: EnrichResult
+  onRetry: () => void
   onReset: () => void
 }
 
 const LATEST_COUNT = 5
 
-function ExportSummary({ data, onReset }: ExportSummaryProps) {
+function ExportSummary({ data, tmdb, onRetry, onReset }: ExportSummaryProps) {
   const { ratings, watched } = data
 
   const average =
@@ -20,6 +23,9 @@ function ExportSummary({ data, onReset }: ExportSummaryProps) {
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, LATEST_COUNT)
 
+  const matched = Object.keys(tmdb.byUri).length
+  const totalFilms = matched + tmdb.unmatched.length + tmdb.failed.length
+
   return (
     <section className="card">
       <h2>Your export</h2>
@@ -31,6 +37,7 @@ function ExportSummary({ data, onReset }: ExportSummaryProps) {
           value={average === null ? '—' : `${average.toFixed(2)} ★`}
           label="Average rating"
         />
+        <Stat value={`${matched} / ${totalFilms}`} label="Matched on TMDB" />
       </div>
 
       {latest.length > 0 && (
@@ -57,6 +64,25 @@ function ExportSummary({ data, onReset }: ExportSummaryProps) {
         </>
       )}
 
+      {tmdb.unmatched.length > 0 && (
+        <details className="details">
+          <summary>{tmdb.unmatched.length} films not found on TMDB</summary>
+          <FilmNames films={tmdb.unmatched} />
+        </details>
+      )}
+
+      {tmdb.failed.length > 0 && (
+        <div className="details">
+          <p className="error-message" role="alert">
+            {tmdb.failed.length} films couldn’t be fetched from TMDB (network
+            problem).
+          </p>
+          <button type="button" className="button" onClick={onRetry}>
+            Retry
+          </button>
+        </div>
+      )}
+
       <button type="button" className="button button--secondary" onClick={onReset}>
         Upload another export
       </button>
@@ -75,6 +101,19 @@ function Stat({ value, label }: StatProps) {
       <span className="stat-value">{value}</span>
       <span className="stat-label">{label}</span>
     </div>
+  )
+}
+
+function FilmNames({ films }: { films: Film[] }) {
+  return (
+    <ul className="plain-list">
+      {films.map((film) => (
+        <li key={film.letterboxdUri}>
+          {film.name}
+          {film.year !== null && <span className="film-year"> {film.year}</span>}
+        </li>
+      ))}
+    </ul>
   )
 }
 

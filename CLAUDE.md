@@ -57,19 +57,30 @@ The user is learning React and TypeScript. Therefore:
 
 ## TMDB (notes)
 
-- `GET /search/movie?query=…&year=…` to find a film.
-- `GET /movie/{id}?append_to_response=credits` for genres, cast and crew
-  (director = crew member with `job === "Director"`).
-- With no backend, the API key ends up in the client bundle — how to handle it
-  is decided in phase 3.
-- Cache responses so repeated runs don't refetch, and respect rate limits.
-- TMDB requires attribution in the UI.
+- Code: `src/lib/tmdb.ts` (API calls + key handling), `src/lib/enrich.ts`
+  (all films, cache, progress).
+- `GET /search/movie` (with `primary_release_year`, falling back to a search
+  without a year that accepts ±1 year) to find a film, then
+  `GET /movie/{id}?append_to_response=credits` for genres, cast (top 15) and
+  directors (crew member with `job === "Director"`).
+- API key: the user's own key (localStorage `statsboxd:tmdbToken`) wins over
+  the built-in one (`VITE_TMDB_TOKEN` in `.env.local`, never committed; see
+  `.env.example`). Both TMDB credential types work: Read Access Token (Bearer
+  header) and the old 32-char API key (`api_key` param).
+- With no backend, any built-in key is visible in the client bundle. For the
+  deploy it comes from a GitHub Actions secret (phase 6).
+- Cache: localStorage `statsboxd:tmdb:v1`, keyed by Letterboxd URI; `null`
+  means "no TMDB match". Bump the version when `TmdbFilm` changes. Failed
+  requests are not cached, so "Retry" refetches only those.
+- Up to 8 requests in flight at once; HTTP 429 is retried with a growing delay.
+- Free for non-commercial use with attribution. The footer has the text; the
+  TMDB logo must be added before the public deploy (phase 6).
 
 ## Phases
 
 1. Project setup + dark theme ✓
-2. ZIP upload + CSV parsing (JSZip, PapaParse) ← current
-3. TMDB integration + caching
+2. ZIP upload + CSV parsing (JSZip, PapaParse) ✓
+3. TMDB integration + caching ← current
 4. Computing the statistics
 5. Charts (Recharts)
 6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions)
