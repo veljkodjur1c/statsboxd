@@ -42,12 +42,18 @@ The user is learning React and TypeScript. Therefore:
 
 ## Letterboxd export (notes)
 
-- The export is a ZIP of CSV files, e.g. `ratings.csv`, `diary.csv`,
-  `watched.csv`, `reviews.csv`, `watchlist.csv`, `profile.csv`.
-- `ratings.csv` columns: `Date, Name, Year, Letterboxd URI, Rating`
-  (rating 0.5–5 in half-star steps).
+- The export is a ZIP of CSV files at the archive root: `ratings.csv`,
+  `watched.csv`, `diary.csv`, `reviews.csv`, `watchlist.csv`, `profile.csv`,
+  `comments.csv`.
+- It also has `deleted/`, `orphaned/`, `likes/` and `lists/` folders, some with
+  files of the same name (e.g. `deleted/diary.csv`) — always read the root files.
+- Columns (confirmed on a real export):
+  - `ratings.csv`: `Date, Name, Year, Letterboxd URI, Rating` (rating 0.5–5 in
+    half-star steps)
+  - `watched.csv`: `Date, Name, Year, Letterboxd URI`
+  - `diary.csv`: `Date, Name, Year, Letterboxd URI, Rating, Rewatch, Tags, Watched Date`
+- Parsing lives in `src/lib/letterboxd.ts`.
 - The export has no TMDB IDs — films are matched via TMDB search by title + year.
-- Verify the exact columns against a real export in phase 2.
 
 ## TMDB (notes)
 
@@ -61,8 +67,8 @@ The user is learning React and TypeScript. Therefore:
 
 ## Phases
 
-1. Project setup + dark theme ← current
-2. ZIP upload + CSV parsing (JSZip, PapaParse)
+1. Project setup + dark theme ✓
+2. ZIP upload + CSV parsing (JSZip, PapaParse) ← current
 3. TMDB integration + caching
 4. Computing the statistics
 5. Charts (Recharts)
