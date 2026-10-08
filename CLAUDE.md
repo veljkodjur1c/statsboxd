@@ -72,16 +72,31 @@ The user is learning React and TypeScript. Therefore:
 - Cache: localStorage `statsboxd:tmdb:v1`, keyed by Letterboxd URI; `null`
   means "no TMDB match". Bump the version when `TmdbFilm` changes. Failed
   requests are not cached, so "Retry" refetches only those.
-- Up to 8 requests in flight at once; HTTP 429 is retried with a growing delay.
+- 4 films in flight at once. Every request also triggers a CORS preflight, and
+  TMDB's 429 on a preflight reaches `fetch` as a plain network error — so
+  network errors are retried (growing delay) just like a 429. After 8
+  consecutive failures the run gives up; unfinished films count as failed.
 - Free for non-commercial use with attribution. The footer has the text; the
   TMDB logo must be added before the public deploy (phase 6).
+
+## Statistics (notes)
+
+- Code: `src/lib/stats.ts` (pure functions, no React); UI in
+  `src/components/StatsSection.tsx` and `StatTable.tsx`.
+- Films = `watched` ∪ `ratings`, one entry per Letterboxd URI.
+- Per group: Films = watched films, Rated = rated films, Avg = average of the
+  ratings (unrated films don't affect it).
+- Genres / actors (all 15 stored cast members) / directors only use films
+  matched on TMDB; people are keyed by TMDB id. Decades use the Letterboxd year.
+- Minimum rated films to be listed (`MIN_RATED`): genres 1, actors 3,
+  directors 2. Default sort: average ↓, then rated ↓, then name; decades by name.
 
 ## Phases
 
 1. Project setup + dark theme ✓
 2. ZIP upload + CSV parsing (JSZip, PapaParse) ✓
-3. TMDB integration + caching ← current
-4. Computing the statistics
+3. TMDB integration + caching ✓
+4. Computing the statistics ← current
 5. Charts (Recharts)
 6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions)
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import EnrichProgress from './components/EnrichProgress.tsx'
 import ExportSummary from './components/ExportSummary.tsx'
+import StatsSection from './components/StatsSection.tsx'
 import TmdbKeyCard from './components/TmdbKeyCard.tsx'
 import TmdbKeyForm from './components/TmdbKeyForm.tsx'
 import UploadCard from './components/UploadCard.tsx'
@@ -91,12 +92,15 @@ function App() {
 
       <main>
         {state.kind === 'done' ? (
-          <ExportSummary
-            data={state.data}
-            tmdb={state.tmdb}
-            onRetry={() => void startEnrich(state.data)}
-            onReset={() => setState({ kind: 'idle' })}
-          />
+          <>
+            <ExportSummary
+              data={state.data}
+              tmdb={state.tmdb}
+              onRetry={() => void startEnrich(state.data)}
+              onReset={() => setState({ kind: 'idle' })}
+            />
+            <StatsSection data={state.data} tmdb={state.tmdb} />
+          </>
         ) : state.kind === 'enriching' ? (
           <EnrichProgress done={state.done} total={state.total} />
         ) : state.kind === 'needs-key' ? (

@@ -1,0 +1,61 @@
+import { useMemo } from 'react'
+import type { EnrichResult } from '../lib/enrich.ts'
+import type { LetterboxdExport } from '../lib/letterboxd.ts'
+import { computeStats, MIN_RATED } from '../lib/stats.ts'
+import StatTable from './StatTable.tsx'
+
+type StatsSectionProps = {
+  data: LetterboxdExport
+  tmdb: EnrichResult
+}
+
+const TOP_COUNT = 10
+
+function StatsSection({ data, tmdb }: StatsSectionProps) {
+  // Recompute only when the data changes, not on every re-render.
+  const stats = useMemo(() => computeStats(data, tmdb), [data, tmdb])
+
+  return (
+    <section className="stats-section" aria-label="Your statistics">
+      {stats.matchedFilms < stats.totalFilms && (
+        <p className="stats-note">
+          Genre, actor and director stats are based on the {stats.matchedFilms}{' '}
+          of {stats.totalFilms} films found on TMDB.
+        </p>
+      )}
+
+      <StatTable
+        title="Average rating by genre"
+        description="Your average rating for each genre. A film can belong to several genres."
+        nameLabel="Genre"
+        rows={stats.genres}
+        defaultSort="average"
+      />
+      <StatTable
+        title="Top actors"
+        description={`Actors in at least ${MIN_RATED.actors} films you rated, by your average rating.`}
+        nameLabel="Actor"
+        rows={stats.actors}
+        defaultSort="average"
+        limit={TOP_COUNT}
+      />
+      <StatTable
+        title="Top directors"
+        description={`Directors of at least ${MIN_RATED.directors} films you rated, by your average rating.`}
+        nameLabel="Director"
+        rows={stats.directors}
+        defaultSort="average"
+        limit={TOP_COUNT}
+      />
+      <StatTable
+        title="Ratings by decade"
+        description="Films grouped by the decade they were released in."
+        nameLabel="Decade"
+        rows={stats.decades}
+        defaultSort="name"
+      />
+    </section>
+  )
+}
+
+export default StatsSection
