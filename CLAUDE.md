@@ -93,13 +93,18 @@ The user is learning React and TypeScript. Therefore:
 - Sorting (`sortGroups`): clicking a column header sorts by it (names A→Z,
   numbers high→low first); clicking it again flips the direction. Ties use
   average ↓, rated ↓, name; groups without an average always go last.
+- Each `GroupStat` carries its `filmList`. Clicking a name opens
+  `FilmListDialog` (native `<dialog>` via `showModal()`, rendered into
+  `<body>` with a portal): films sorted by your rating ↓ (unrated last), then
+  newest first, each linking to its Letterboxd page. Shared helpers such as
+  `formatStars` live in `src/lib/format.ts`.
 
 ## Phases
 
 1. Project setup + dark theme ✓
 2. ZIP upload + CSV parsing (JSZip, PapaParse) ✓
 3. TMDB integration + caching ✓
-4. Computing the statistics ← current
+4. Computing the statistics ✓
 5. Charts (Recharts)
 6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions)
 

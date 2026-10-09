@@ -17,6 +17,7 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
 
   return (
     <section className="stats-section" aria-label="Your statistics">
+      <p className="stats-note">Click any name to see the films behind it.</p>
       {stats.matchedFilms < stats.totalFilms && (
         <p className="stats-note">
           Genre, actor and director stats are based on the {stats.matchedFilms}{' '}

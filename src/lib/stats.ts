@@ -2,6 +2,14 @@ import type { EnrichResult } from './enrich.ts'
 import type { Film, LetterboxdExport } from './letterboxd.ts'
 import type { Person, TmdbFilm } from './tmdb.ts'
 
+/** A film as listed in a group's detail view. */
+export type GroupFilm = {
+  letterboxdUri: string
+  name: string
+  year: number | null
+  rating: number | null // null if you watched it without rating it
+}
+
 /** One row of a statistic, e.g. one genre or one director. */
 export type GroupStat = {
   key: string
@@ -9,6 +17,7 @@ export type GroupStat = {
   films: number // films you watched in this group
   rated: number // how many of those you rated
   average: number | null // average of your ratings; null if none were rated
+  filmList: GroupFilm[] // the films themselves
 }
 
 export type Stats = {
@@ -95,7 +104,7 @@ function aggregate(
 ): GroupStat[] {
   const totals = new Map<
     string,
-    { label: string; films: number; rated: number; sum: number }
+    { label: string; rated: number; sum: number; filmList: GroupFilm[] }
   >()
 
   for (const entry of entries) {
@@ -110,10 +119,15 @@ function aggregate(
 
       let total = totals.get(key)
       if (total === undefined) {
-        total = { label, films: 0, rated: 0, sum: 0 }
+        total = { label, rated: 0, sum: 0, filmList: [] }
         totals.set(key, total)
       }
-      total.films++
+      total.filmList.push({
+        letterboxdUri: entry.film.letterboxdUri,
+        name: entry.film.name,
+        year: entry.film.year,
+        rating: entry.rating,
+      })
       if (entry.rating !== null) {
         total.rated++
         total.sum += entry.rating
@@ -124,9 +138,10 @@ function aggregate(
   return [...totals].map(([key, total]) => ({
     key,
     label: total.label,
-    films: total.films,
+    films: total.filmList.length,
     rated: total.rated,
     average: total.rated > 0 ? total.sum / total.rated : null,
+    filmList: total.filmList,
   }))
 }
 

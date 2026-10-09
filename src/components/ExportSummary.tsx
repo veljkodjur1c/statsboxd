@@ -1,4 +1,5 @@
 import type { EnrichResult } from '../lib/enrich.ts'
+import { formatStars } from '../lib/format.ts'
 import type { Film, LetterboxdExport } from '../lib/letterboxd.ts'
 
 type ExportSummaryProps = {
@@ -115,12 +116,6 @@ function FilmNames({ films }: { films: Film[] }) {
       ))}
     </ul>
   )
-}
-
-/** 3.5 → "★★★½" */
-function formatStars(rating: number): string {
-  const halfStar = rating % 1 === 0.5 ? '½' : ''
-  return '★'.repeat(Math.floor(rating)) + halfStar
 }
 
 export default ExportSummary

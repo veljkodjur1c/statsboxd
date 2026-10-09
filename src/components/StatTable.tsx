@@ -6,6 +6,7 @@ import {
   type SortDirection,
   type SortKey,
 } from '../lib/stats.ts'
+import FilmListDialog from './FilmListDialog.tsx'
 
 type StatTableProps = {
   title: string
@@ -34,6 +35,8 @@ function StatTable({
     direction: DEFAULT_DIRECTION[defaultSort],
   })
   const [showAll, setShowAll] = useState(false)
+  // The group whose films are shown in the dialog; null = dialog closed.
+  const [openGroup, setOpenGroup] = useState<GroupStat | null>(null)
 
   // Clicking the active column flips its direction; clicking another column
   // switches to it in that column's default direction.
@@ -69,7 +72,15 @@ function StatTable({
           <tbody>
             {visible.map((row) => (
               <tr key={row.key}>
-                <th scope="row">{row.label}</th>
+                <th scope="row">
+                  <button
+                    type="button"
+                    className="row-button"
+                    onClick={() => setOpenGroup(row)}
+                  >
+                    {row.label}
+                  </button>
+                </th>
                 <td>{row.films}</td>
                 <td>{row.rated}</td>
                 <td className="stat-average">
@@ -89,6 +100,14 @@ function StatTable({
         >
           {showAll ? 'Show less' : `Show all ${rows.length}`}
         </button>
+      )}
+
+      {openGroup !== null && (
+        <FilmListDialog
+          group={openGroup}
+          kind={nameLabel}
+          onClose={() => setOpenGroup(null)}
+        />
       )}
     </section>
   )

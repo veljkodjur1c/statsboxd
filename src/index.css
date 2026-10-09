@@ -469,6 +469,128 @@ th[aria-sort] .sort-button {
   color: var(--color-accent);
 }
 
+.row-button {
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.row-button:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.row-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Film list dialog */
+
+/* Stop the page behind the dialog from scrolling while it's open. */
+body:has(.film-dialog[open]) {
+  overflow: hidden;
+}
+
+.film-dialog {
+  width: min(560px, calc(100% - 2 * var(--space-3)));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 0.6);
+}
+
+.film-dialog::backdrop {
+  background: rgb(0 0 0 / 0.7);
+}
+
+.film-dialog-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.film-dialog h2 {
+  font-size: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+.film-dialog-kind {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.film-dialog-meta {
+  margin-top: var(--space-1);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.dialog-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.dialog-close:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.dialog-close:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.film-dialog-list {
+  max-width: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
+
+.film-dialog-list a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.film-dialog-list a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.film-unrated {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
 .button--small {
   margin-top: var(--space-3);
   padding: 6px 18px;
