@@ -9,8 +9,6 @@ type StatsSectionProps = {
   tmdb: EnrichResult
 }
 
-const TOP_COUNT = 10
-
 function StatsSection({ data, tmdb }: StatsSectionProps) {
   // Recompute only when the data changes, not on every re-render.
   const stats = useMemo(() => computeStats(data, tmdb), [data, tmdb])
@@ -38,7 +36,6 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
         nameLabel="Actor"
         rows={stats.actors}
         defaultSort="average"
-        limit={TOP_COUNT}
       />
       <StatTable
         title="Top directors"
@@ -46,7 +43,6 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
         nameLabel="Director"
         rows={stats.directors}
         defaultSort="average"
-        limit={TOP_COUNT}
       />
       <StatTable
         title="Ratings by decade"

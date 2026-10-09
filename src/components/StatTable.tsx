@@ -8,13 +8,16 @@ import {
 } from '../lib/stats.ts'
 import FilmListDialog from './FilmListDialog.tsx'
 
+// Every table shows this many rows until "Show all" is clicked. The CSS
+// (.stat-card) reserves exactly this much room, so collapsed cards line up.
+const VISIBLE_ROWS = 10
+
 type StatTableProps = {
   title: string
   description: string
   nameLabel: string // header of the first column, e.g. "Genre"
   rows: GroupStat[]
   defaultSort: SortKey
-  limit?: number // show only the first rows until "Show all" is clicked
 }
 
 type Sort = {
@@ -28,7 +31,6 @@ function StatTable({
   nameLabel,
   rows,
   defaultSort,
-  limit,
 }: StatTableProps) {
   const [sort, setSort] = useState<Sort>({
     key: defaultSort,
@@ -49,8 +51,7 @@ function StatTable({
   }
 
   const sorted = sortGroups(rows, sort.key, sort.direction)
-  const visible =
-    limit === undefined || showAll ? sorted : sorted.slice(0, limit)
+  const visible = showAll ? sorted : sorted.slice(0, VISIBLE_ROWS)
 
   return (
     <section className="card stat-card">
@@ -76,6 +77,7 @@ function StatTable({
                   <button
                     type="button"
                     className="row-button"
+                    title={row.label} // long names are cut off with "…"
                     onClick={() => setOpenGroup(row)}
                   >
                     {row.label}
@@ -92,7 +94,7 @@ function StatTable({
         </table>
       )}
 
-      {limit !== undefined && rows.length > limit && (
+      {rows.length > VISIBLE_ROWS && (
         <button
           type="button"
           className="button button--secondary button--small"

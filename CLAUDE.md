@@ -83,6 +83,10 @@ The user is learning React and TypeScript. Therefore:
 
 - Code: `src/lib/stats.ts` (pure functions, no React); UI in
   `src/components/StatsSection.tsx` and `StatTable.tsx`.
+- Every table shows 10 rows until "Show all" (`VISIBLE_ROWS` in `StatTable`).
+  `.stat-card` is a grid that reserves room for heading, 2-line description,
+  header + 10 rows and the button, so collapsed cards are all the same height;
+  rows have a fixed height and long names are ellipsized.
 - Films = `watched` ∪ `ratings`, one entry per Letterboxd URI.
 - Per group: Films = watched films, Rated = rated films, Avg = average of the
   ratings (unrated films don't affect it).

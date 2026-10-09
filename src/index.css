@@ -384,8 +384,34 @@ progress::-moz-progress-bar {
   color: var(--color-text-muted);
 }
 
+/*
+ * The card is a grid with four tracks that each reserve a fixed minimum:
+ * heading, description (2 lines), table (header + 10 rows) and a footer for
+ * the "Show all" button. Because the room is reserved even when a part is
+ * missing (e.g. the decades table has no button), every collapsed card has
+ * exactly the same height. Expanding one grows only that card.
+ */
 .stat-card {
+  --stat-row-height: 2.75rem;
+
+  display: grid;
+  grid-template-rows:
+    auto
+    minmax(calc(3rem + var(--space-3)), auto)
+    minmax(calc(11 * var(--stat-row-height)), auto)
+    minmax(calc(var(--space-3) + 2.25rem), auto);
   padding: var(--space-4);
+}
+
+.stat-card > .stat-table,
+.stat-card > .empty-note {
+  align-self: start;
+}
+
+.stat-card > .button {
+  align-self: start;
+  justify-self: center;
+  height: 2.25rem;
 }
 
 .stat-card h2 {
@@ -403,20 +429,29 @@ progress::-moz-progress-bar {
 
 .stat-table {
   width: 100%;
-  border-collapse: collapse;
+  /* "separate" + zero spacing keeps every row exactly --stat-row-height. */
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-table th,
 .stat-table td {
-  padding: var(--space-2) var(--space-1);
+  height: var(--stat-row-height);
+  padding: 0 var(--space-1);
   border-bottom: 1px solid var(--color-border);
+}
+
+/* The name column takes the leftover width; long names end with "…". */
+.stat-table th:first-child {
+  width: 100%;
+  max-width: 0;
+  overflow: hidden;
 }
 
 .stat-table tbody th {
   font-weight: 400;
-  overflow-wrap: anywhere;
 }
 
 /* Number columns: narrow and right-aligned. */
@@ -470,10 +505,14 @@ th[aria-sort] .sort-button {
 }
 
 .row-button {
+  display: block;
+  max-width: 100%;
   padding: 0;
   font: inherit;
   text-align: left;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--color-text);
   background: none;
   border: none;
