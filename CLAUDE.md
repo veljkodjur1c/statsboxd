@@ -68,7 +68,7 @@ The user is learning React and TypeScript. Therefore:
   `.env.example`). Both TMDB credential types work: Read Access Token (Bearer
   header) and the old 32-char API key (`api_key` param).
 - With no backend, any built-in key is visible in the client bundle. For the
-  deploy it comes from a GitHub Actions secret (phase 6).
+  deploy it comes from the GitHub Actions secret `VITE_TMDB_TOKEN`.
 - Cache: localStorage `statsboxd:tmdb:v1`, keyed by Letterboxd URI; `null`
   means "no TMDB match". Bump the version when `TmdbFilm` changes. Failed
   requests are not cached, so "Retry" refetches only those.
@@ -76,8 +76,10 @@ The user is learning React and TypeScript. Therefore:
   TMDB's 429 on a preflight reaches `fetch` as a plain network error — so
   network errors are retried (growing delay) just like a 429. After 8
   consecutive failures the run gives up; unfinished films count as failed.
-- Free for non-commercial use with attribution. The footer has the text; the
-  TMDB logo must be added before the public deploy (phase 6).
+- Free for non-commercial use with attribution. The footer has the official
+  TMDB logo (`src/assets/tmdb-logo.svg`, the "alt short" file from
+  themoviedb.org/about/logos-attribution, unmodified, smaller than our own
+  branding) and the "not endorsed or certified by TMDB" notice.
 
 ## Statistics (notes)
 
@@ -122,8 +124,24 @@ The user is learning React and TypeScript. Therefore:
   first; the overall-average reference line is explained by an HTML key above
   the plot; the table view is the accessible twin; no animation with
   `prefers-reduced-motion`.
-- Recharts makes the JS bundle ~720 KB (215 KB gzipped); Vite warns about it.
-  Lazy-loading the charts is an option for phase 6.
+- Everything that uses Recharts is behind `src/components/Results.tsx`, which
+  `App` loads lazily (`React.lazy` + `Suspense`) and starts downloading as
+  soon as a file is chosen. Initial JS ~350 KB (110 KB gzipped), the results
+  chunk ~375 KB.
+
+## Deploy (notes)
+
+- Live at https://veljkodjur1c.github.io/statsboxd/ (GitHub Pages, source:
+  GitHub Actions). The repository must stay public for free Pages.
+- `.github/workflows/deploy.yml` runs on every push to `main` (or by hand from
+  the Actions tab): `npm ci` → `npm run lint` → `npm run build` with the
+  `VITE_TMDB_TOKEN` repository secret → upload `dist/` → deploy.
+- `vite.config.ts` sets `base: '/statsboxd/'` for the build and for
+  `npm run preview`; the dev server stays at `/`. Reference assets by importing
+  them (like the TMDB logo) or via `import.meta.env.BASE_URL`, never with a
+  hard-coded leading `/`.
+- A local `npm run build` bakes the token from `.env.local` into `dist/` —
+  never share or upload a local `dist/`.
 
 ## Phases
 
@@ -132,11 +150,12 @@ The user is learning React and TypeScript. Therefore:
 3. TMDB integration + caching ✓
 4. Computing the statistics ✓
 5. Charts (Recharts) ✓
-6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions)
+6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions) ✓
 
 ## Commands
 
 - `npm run dev` — dev server at http://localhost:5173
 - `npm run build` — type-check (`tsc -b`) + production build into `dist/`
 - `npm run lint` — oxlint
-- `npm run preview` — serve the production build locally
+- `npm run preview` — serve the production build locally at
+  http://localhost:4173/statsboxd/

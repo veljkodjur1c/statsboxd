@@ -1,0 +1,54 @@
+# Builds the app and publishes it to GitHub Pages on every push to main.
+# It can also be started by hand from the repository's Actions tab.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pages deployment needs to write to Pages and prove who it is (id-token).
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# If two pushes come quickly, only the newest one gets deployed.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+
+      # The TMDB token comes from the repository secret VITE_TMDB_TOKEN.
+      # Without it the build still works; the site then asks visitors for
+      # their own TMDB key.
+      - run: npm run build
+        env:
+          VITE_TMDB_TOKEN: ${{ secrets.VITE_TMDB_TOKEN }}
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
+import tmdbLogo from './assets/tmdb-logo.svg'
 import EnrichProgress from './components/EnrichProgress.tsx'
-import ExportSummary from './components/ExportSummary.tsx'
-import StatsSection from './components/StatsSection.tsx'
 import TmdbKeyCard from './components/TmdbKeyCard.tsx'
 import TmdbKeyForm from './components/TmdbKeyForm.tsx'
 import UploadCard from './components/UploadCard.tsx'
@@ -11,6 +10,12 @@ import {
   type LetterboxdExport,
 } from './lib/letterboxd.ts'
 import { getTmdbToken, TmdbAuthError } from './lib/tmdb.ts'
+
+// The results view (with the charts) is a separate file the browser only
+// downloads when needed. handleFile starts that download early, while the
+// export is still being processed, so it's usually ready in time.
+const loadResults = () => import('./components/Results.tsx')
+const Results = lazy(loadResults)
 
 // Each state carries only the data that makes sense for it.
 type AppState =
@@ -30,6 +35,7 @@ function App() {
 
   async function handleFile(file: File) {
     setState({ kind: 'parsing' })
+    void loadResults()
     try {
       const data = await parseLetterboxdExport(file)
       await startEnrich(data)
@@ -92,15 +98,15 @@ function App() {
 
       <main>
         {state.kind === 'done' ? (
-          <>
-            <ExportSummary
+          // Shown for the moment the results file is still downloading.
+          <Suspense fallback={<p className="loading-note">Preparing your stats…</p>}>
+            <Results
               data={state.data}
               tmdb={state.tmdb}
               onRetry={() => void startEnrich(state.data)}
               onReset={() => setState({ kind: 'idle' })}
             />
-            <StatsSection data={state.data} tmdb={state.tmdb} />
-          </>
+          </Suspense>
         ) : state.kind === 'enriching' ? (
           <EnrichProgress done={state.done} total={state.total} />
         ) : state.kind === 'needs-key' ? (
@@ -116,12 +122,17 @@ function App() {
 
       <footer className="site-footer">
         <p>Not affiliated with Letterboxd.</p>
+        <a
+          className="tmdb-logo"
+          href="https://www.themoviedb.org"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <img src={tmdbLogo} alt="The Movie Database (TMDB)" width="92" height="12" />
+        </a>
         <p>
-          This product uses the TMDB API but is not endorsed or certified by{' '}
-          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
-            TMDB
-          </a>
-          .
+          This product uses the TMDB API but is not endorsed or certified by
+          TMDB.
         </p>
         {state.kind !== 'needs-key' && (
           <details className="key-settings">

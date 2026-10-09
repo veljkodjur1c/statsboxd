@@ -133,6 +133,24 @@ main {
   margin-top: var(--space-1);
 }
 
+/* TMDB requires its logo next to the attribution; kept small and quieter
+   than our own branding. */
+.tmdb-logo {
+  display: inline-block;
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+.tmdb-logo img {
+  display: block;
+  width: 92px;
+  height: auto;
+}
+
+.loading-note {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
 .key-settings {
   max-width: 520px;
   margin: var(--space-3) auto 0;
