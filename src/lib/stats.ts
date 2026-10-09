@@ -29,6 +29,15 @@ export const MIN_RATED = {
 }
 
 export type SortKey = 'name' | 'films' | 'rated' | 'average'
+export type SortDirection = 'asc' | 'desc'
+
+/** The direction a column sorts in when it is first clicked. */
+export const DEFAULT_DIRECTION: Record<SortKey, SortDirection> = {
+  name: 'asc',
+  films: 'desc',
+  rated: 'desc',
+  average: 'desc',
+}
 
 type Compare = (a: GroupStat, b: GroupStat) => number
 
@@ -36,19 +45,33 @@ type Compare = (a: GroupStat, b: GroupStat) => number
 const byName: Compare = (a, b) =>
   a.label.localeCompare(b.label, undefined, { numeric: true })
 
-// Groups without any rating (average === null) go last.
-const byAverage: Compare = (a, b) =>
+// Each of these compares in ascending order; sortGroups flips them for 'desc'.
+const ascending: Record<SortKey, Compare> = {
+  name: byName,
+  films: (a, b) => a.films - b.films,
+  rated: (a, b) => a.rated - b.rated,
+  average: (a, b) => (a.average ?? 0) - (b.average ?? 0),
+}
+
+// Used when the sort column is equal: best average, then most rated, then name.
+// A comparison that returns 0 is falsy, so `||` moves on to the next rule.
+const tieBreak: Compare = (a, b) =>
   (b.average ?? -1) - (a.average ?? -1) || b.rated - a.rated || byName(a, b)
 
-/**
- * How to order rows for each sort column. Ties fall back to the next rule:
- * a comparison that returns 0 is falsy, so `||` moves on to the next one.
- */
-export const comparators: Record<SortKey, Compare> = {
-  name: byName,
-  films: (a, b) => b.films - a.films || byAverage(a, b),
-  rated: (a, b) => b.rated - a.rated || byAverage(a, b),
-  average: byAverage,
+/** Returns a sorted copy of the groups. */
+export function sortGroups(
+  groups: GroupStat[],
+  key: SortKey,
+  direction: SortDirection,
+): GroupStat[] {
+  const sign = direction === 'asc' ? 1 : -1
+  return [...groups].sort((a, b) => {
+    // Groups with no rated films have no average: keep them last either way.
+    if (key === 'average' && (a.average === null) !== (b.average === null)) {
+      return a.average === null ? 1 : -1
+    }
+    return sign * ascending[key](a, b) || tieBreak(a, b)
+  })
 }
 
 type FilmEntry = {
@@ -158,10 +181,14 @@ export function computeStats(
   )
 
   return {
-    genres: atLeast(genres, MIN_RATED.genres).sort(byAverage),
-    actors: atLeast(actors, MIN_RATED.actors).sort(byAverage),
-    directors: atLeast(directors, MIN_RATED.directors).sort(byAverage),
-    decades: decades.sort(byName),
+    genres: sortGroups(atLeast(genres, MIN_RATED.genres), 'average', 'desc'),
+    actors: sortGroups(atLeast(actors, MIN_RATED.actors), 'average', 'desc'),
+    directors: sortGroups(
+      atLeast(directors, MIN_RATED.directors),
+      'average',
+      'desc',
+    ),
+    decades: sortGroups(decades, 'name', 'asc'),
     matchedFilms: entries.filter((entry) => entry.tmdb !== null).length,
     totalFilms: entries.length,
   }

@@ -90,6 +90,9 @@ The user is learning React and TypeScript. Therefore:
   matched on TMDB; people are keyed by TMDB id. Decades use the Letterboxd year.
 - Minimum rated films to be listed (`MIN_RATED`): genres 1, actors 3,
   directors 2. Default sort: average ↓, then rated ↓, then name; decades by name.
+- Sorting (`sortGroups`): clicking a column header sorts by it (names A→Z,
+  numbers high→low first); clicking it again flips the direction. Ties use
+  average ↓, rated ↓, name; groups without an average always go last.
 
 ## Phases
 

@@ -1,5 +1,11 @@
 import { useState } from 'react'
-import { comparators, type GroupStat, type SortKey } from '../lib/stats.ts'
+import {
+  DEFAULT_DIRECTION,
+  sortGroups,
+  type GroupStat,
+  type SortDirection,
+  type SortKey,
+} from '../lib/stats.ts'
 
 type StatTableProps = {
   title: string
@@ -10,6 +16,11 @@ type StatTableProps = {
   limit?: number // show only the first rows until "Show all" is clicked
 }
 
+type Sort = {
+  key: SortKey
+  direction: SortDirection
+}
+
 function StatTable({
   title,
   description,
@@ -18,10 +29,23 @@ function StatTable({
   defaultSort,
   limit,
 }: StatTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey>(defaultSort)
+  const [sort, setSort] = useState<Sort>({
+    key: defaultSort,
+    direction: DEFAULT_DIRECTION[defaultSort],
+  })
   const [showAll, setShowAll] = useState(false)
 
-  const sorted = [...rows].sort(comparators[sortKey])
+  // Clicking the active column flips its direction; clicking another column
+  // switches to it in that column's default direction.
+  function handleSort(column: SortKey) {
+    setSort((current) =>
+      current.key === column
+        ? { key: column, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { key: column, direction: DEFAULT_DIRECTION[column] },
+    )
+  }
+
+  const sorted = sortGroups(rows, sort.key, sort.direction)
   const visible =
     limit === undefined || showAll ? sorted : sorted.slice(0, limit)
 
@@ -36,10 +60,10 @@ function StatTable({
         <table className="stat-table">
           <thead>
             <tr>
-              <SortHeader column="name" label={nameLabel} sortKey={sortKey} onSort={setSortKey} />
-              <SortHeader column="films" label="Films" sortKey={sortKey} onSort={setSortKey} />
-              <SortHeader column="rated" label="Rated" sortKey={sortKey} onSort={setSortKey} />
-              <SortHeader column="average" label="Avg" sortKey={sortKey} onSort={setSortKey} />
+              <SortHeader column="name" label={nameLabel} sort={sort} onSort={handleSort} />
+              <SortHeader column="films" label="Films" sort={sort} onSort={handleSort} />
+              <SortHeader column="rated" label="Rated" sort={sort} onSort={handleSort} />
+              <SortHeader column="average" label="Avg" sort={sort} onSort={handleSort} />
             </tr>
           </thead>
           <tbody>
@@ -73,21 +97,20 @@ function StatTable({
 type SortHeaderProps = {
   column: SortKey
   label: string
-  sortKey: SortKey
+  sort: Sort
   onSort: (column: SortKey) => void
 }
 
-function SortHeader({ column, label, sortKey, onSort }: SortHeaderProps) {
-  const active = column === sortKey
-  // Names sort A→Z; every number column sorts from highest to lowest.
-  const direction = column === 'name' ? 'ascending' : 'descending'
+function SortHeader({ column, label, sort, onSort }: SortHeaderProps) {
+  const active = column === sort.key
+  const ariaSort = sort.direction === 'asc' ? 'ascending' : 'descending'
 
   return (
-    <th scope="col" aria-sort={active ? direction : undefined}>
+    <th scope="col" aria-sort={active ? ariaSort : undefined}>
       <button type="button" className="sort-button" onClick={() => onSort(column)}>
         {label}
         <span className="sort-arrow" aria-hidden="true">
-          {active ? (direction === 'ascending' ? '▲' : '▼') : ''}
+          {active ? (sort.direction === 'asc' ? '▲' : '▼') : ''}
         </span>
       </button>
     </th>
