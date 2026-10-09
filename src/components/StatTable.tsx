@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   DEFAULT_DIRECTION,
   sortGroups,
@@ -18,6 +18,9 @@ type StatTableProps = {
   nameLabel: string // header of the first column, e.g. "Genre"
   rows: GroupStat[]
   defaultSort: SortKey
+  // Optional chart view. It's a function ("render prop") so the table can
+  // hand the chart a way to open the film list when a bar is clicked.
+  renderChart?: (onSelect: (group: GroupStat) => void) => ReactNode
 }
 
 type Sort = {
@@ -25,17 +28,21 @@ type Sort = {
   direction: SortDirection
 }
 
+type View = 'chart' | 'table'
+
 function StatTable({
   title,
   description,
   nameLabel,
   rows,
   defaultSort,
+  renderChart,
 }: StatTableProps) {
   const [sort, setSort] = useState<Sort>({
     key: defaultSort,
     direction: DEFAULT_DIRECTION[defaultSort],
   })
+  const [view, setView] = useState<View>(renderChart ? 'chart' : 'table')
   const [showAll, setShowAll] = useState(false)
   // The group whose films are shown in the dialog; null = dialog closed.
   const [openGroup, setOpenGroup] = useState<GroupStat | null>(null)
@@ -60,6 +67,8 @@ function StatTable({
 
       {rows.length === 0 ? (
         <p className="empty-note">Not enough rated films yet.</p>
+      ) : view === 'chart' && renderChart ? (
+        <div className="stat-chart">{renderChart(setOpenGroup)}</div>
       ) : (
         <table className="stat-table">
           <thead>
@@ -94,15 +103,21 @@ function StatTable({
         </table>
       )}
 
-      {rows.length > VISIBLE_ROWS && (
-        <button
-          type="button"
-          className="button button--secondary button--small"
-          onClick={() => setShowAll(!showAll)}
-        >
-          {showAll ? 'Show less' : `Show all ${rows.length}`}
-        </button>
-      )}
+      {/* Always rendered, so every card keeps the same footer row. */}
+      <div className="stat-card-footer">
+        {renderChart && rows.length > 0 && (
+          <ViewToggle view={view} onChange={setView} />
+        )}
+        {view === 'table' && rows.length > VISIBLE_ROWS && (
+          <button
+            type="button"
+            className="button button--secondary button--small"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? 'Show less' : `Show all ${rows.length}`}
+          </button>
+        )}
+      </div>
 
       {openGroup !== null && (
         <FilmListDialog
@@ -112,6 +127,33 @@ function StatTable({
         />
       )}
     </section>
+  )
+}
+
+type ViewToggleProps = {
+  view: View
+  onChange: (view: View) => void
+}
+
+/** Two-button switch between the chart and the table. */
+function ViewToggle({ view, onChange }: ViewToggleProps) {
+  const options: { value: View; label: string }[] = [
+    { value: 'chart', label: 'Chart' },
+    { value: 'table', label: 'Table' },
+  ]
+  return (
+    <div className="view-toggle" role="group" aria-label="View as">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          aria-pressed={view === option.value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   )
 }
 

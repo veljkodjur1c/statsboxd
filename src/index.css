@@ -9,6 +9,9 @@
   --color-accent-hover: #f2c46d;
   --color-on-accent: #1a1408;
   --color-error: #f08a7e;
+  /* Chart bars. A deeper step of the accent: the accent itself is too light
+     for large fills on this dark surface (checked with a palette validator). */
+  --color-chart: #b8862f;
 
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -408,10 +411,132 @@ progress::-moz-progress-bar {
   align-self: start;
 }
 
-.stat-card > .button {
-  align-self: start;
-  justify-self: center;
+/* Footer track: the Chart/Table switch and the "Show all" button. */
+.stat-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.stat-card-footer .button--small {
   height: 2.25rem;
+  margin-top: 0;
+}
+
+.view-toggle {
+  display: inline-flex;
+  height: 2.25rem;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.view-toggle button {
+  padding: 0 14px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.view-toggle button:hover {
+  color: var(--color-text);
+}
+
+.view-toggle button[aria-pressed='true'] {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.view-toggle button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Charts */
+
+/* Same height as the table area (header + 10 rows), so switching views
+   doesn't change the card's height. */
+.stat-chart {
+  display: flex;
+  flex-direction: column;
+  height: calc(11 * var(--stat-row-height));
+  text-align: left;
+}
+
+.chart-plot {
+  flex: 1;
+  min-height: 0;
+}
+
+.rating-chart {
+  height: 200px;
+  margin-bottom: var(--space-2);
+}
+
+.chart-key {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.chart-key-line {
+  width: 16px;
+  height: 0;
+  border-top: 1px solid var(--color-text-muted);
+}
+
+.chart-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) 12px;
+  text-align: left;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+.chart-tooltip strong {
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.chart-tooltip span {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.chart-tooltip .chart-tooltip-detail {
+  font-size: 0.75rem;
+}
+
+/* Recharts makes the chart focusable for keyboard users; only show the
+   focus ring for keyboard focus, not after a mouse click. */
+.recharts-wrapper :focus:not(:focus-visible),
+.recharts-surface:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.recharts-surface:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.recharts-text {
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-card h2 {

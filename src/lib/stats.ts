@@ -25,8 +25,33 @@ export type Stats = {
   actors: GroupStat[]
   directors: GroupStat[]
   decades: GroupStat[]
+  averageRating: number | null // over all your ratings; null if none
   matchedFilms: number // films found on TMDB
   totalFilms: number
+}
+
+/** One bar of the rating histogram, e.g. { rating: 3.5, count: 41 }. */
+export type RatingBin = {
+  rating: number
+  count: number
+}
+
+/**
+ * How many films got each rating, from ½★ to 5★. Every half-star step is
+ * included, even with a count of 0, so the chart's x-axis never skips one.
+ */
+export function ratingDistribution(ratings: { rating: number }[]): RatingBin[] {
+  const bins: RatingBin[] = Array.from({ length: 10 }, (_, index) => ({
+    rating: (index + 1) / 2,
+    count: 0,
+  }))
+  for (const { rating } of ratings) {
+    const index = Math.round(rating * 2) - 1
+    if (index >= 0 && index < bins.length) {
+      bins[index].count++
+    }
+  }
+  return bins
 }
 
 // A group needs this many rated films to be listed, so that a single 5★ film
@@ -204,6 +229,11 @@ export function computeStats(
       'desc',
     ),
     decades: sortGroups(decades, 'name', 'asc'),
+    averageRating:
+      data.ratings.length > 0
+        ? data.ratings.reduce((sum, film) => sum + film.rating, 0) /
+          data.ratings.length
+        : null,
     matchedFilms: entries.filter((entry) => entry.tmdb !== null).length,
     totalFilms: entries.length,
   }

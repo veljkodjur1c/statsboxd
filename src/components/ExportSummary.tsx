@@ -1,6 +1,8 @@
 import type { EnrichResult } from '../lib/enrich.ts'
 import { formatStars } from '../lib/format.ts'
 import type { Film, LetterboxdExport } from '../lib/letterboxd.ts'
+import { ratingDistribution } from '../lib/stats.ts'
+import RatingDistributionChart from './charts/RatingDistributionChart.tsx'
 
 type ExportSummaryProps = {
   data: LetterboxdExport
@@ -40,6 +42,13 @@ function ExportSummary({ data, tmdb, onRetry, onReset }: ExportSummaryProps) {
         />
         <Stat value={`${matched} / ${totalFilms}`} label="Matched on TMDB" />
       </div>
+
+      {ratings.length > 0 && (
+        <>
+          <h3>How you rate</h3>
+          <RatingDistributionChart bins={ratingDistribution(ratings)} />
+        </>
+      )}
 
       {latest.length > 0 && (
         <>

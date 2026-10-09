@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import type { EnrichResult } from '../lib/enrich.ts'
 import type { LetterboxdExport } from '../lib/letterboxd.ts'
 import { computeStats, MIN_RATED } from '../lib/stats.ts'
+import DecadeChart from './charts/DecadeChart.tsx'
+import GenreChart from './charts/GenreChart.tsx'
 import StatTable from './StatTable.tsx'
 
 type StatsSectionProps = {
@@ -15,7 +17,9 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
 
   return (
     <section className="stats-section" aria-label="Your statistics">
-      <p className="stats-note">Click any name to see the films behind it.</p>
+      <p className="stats-note">
+        Click any name or bar to see the films behind it.
+      </p>
       {stats.matchedFilms < stats.totalFilms && (
         <p className="stats-note">
           Genre, actor and director stats are based on the {stats.matchedFilms}{' '}
@@ -29,6 +33,13 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
         nameLabel="Genre"
         rows={stats.genres}
         defaultSort="average"
+        renderChart={(onSelect) => (
+          <GenreChart
+            rows={stats.genres}
+            average={stats.averageRating}
+            onSelect={onSelect}
+          />
+        )}
       />
       <StatTable
         title="Top actors"
@@ -50,6 +61,13 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
         nameLabel="Decade"
         rows={stats.decades}
         defaultSort="name"
+        renderChart={(onSelect) => (
+          <DecadeChart
+            rows={stats.decades}
+            average={stats.averageRating}
+            onSelect={onSelect}
+          />
+        )}
       />
     </section>
   )

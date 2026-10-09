@@ -103,13 +103,35 @@ The user is learning React and TypeScript. Therefore:
   newest first, each linking to its Letterboxd page. Shared helpers such as
   `formatStars` live in `src/lib/format.ts`.
 
+## Charts (notes)
+
+- Recharts 3. Charts live in `src/components/charts/`; their shared look
+  (tick style, grid, bar color, max bar size, reduced-motion switch) is in
+  `chartTheme.ts`.
+- Rating distribution (½★–5★ histogram) sits in the "Your export" card.
+  Genre (horizontal bars) and decade (columns) charts are the default view of
+  their stat cards, with a Chart/Table switch (`renderChart` render prop on
+  `StatTable`). The chart area has the same height as the table area, so
+  cards stay equal. Clicking a bar opens the same `FilmListDialog`.
+- Rules (from the dataviz guidelines): one y-scale per chart, never two —
+  extra numbers go in the tooltip or table; one series = one color, no legend
+  box; bars `--color-chart` (#b8862f — the accent #e8b04b failed the palette
+  validator's lightness band for fills on the dark surface), hovered bar
+  lights up to the accent; bars ≤ 24px with 4px rounded ends; hairline solid
+  gridlines; axis text muted, never the bar color; tooltips show the value
+  first; the overall-average reference line is explained by an HTML key above
+  the plot; the table view is the accessible twin; no animation with
+  `prefers-reduced-motion`.
+- Recharts makes the JS bundle ~720 KB (215 KB gzipped); Vite warns about it.
+  Lazy-loading the charts is an option for phase 6.
+
 ## Phases
 
 1. Project setup + dark theme ✓
 2. ZIP upload + CSV parsing (JSZip, PapaParse) ✓
 3. TMDB integration + caching ✓
 4. Computing the statistics ✓
-5. Charts (Recharts)
+5. Charts (Recharts) ✓
 6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions)
 
 ## Commands
