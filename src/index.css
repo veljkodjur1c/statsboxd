@@ -1,20 +1,61 @@
-/* Design tokens — reuse these instead of hard-coding values. */
+/*
+ * Design tokens — reuse these instead of hard-coding values.
+ *
+ * The look is a projection room: neutral near-blacks, one light source (aqua)
+ * for everything you can act on, and amber reserved for your ratings. These
+ * values mirror the "Statsboxd" design system (tokens.json there), which also
+ * has the usage rules and live previews of every component.
+ */
 :root {
-  --color-bg: #0d0c0b;
-  --color-surface: #171513;
-  --color-border: #2e2a25;
-  --color-text: #ece6dc;
-  --color-text-muted: #a39a8c;
-  --color-accent: #e8b04b;
-  --color-accent-hover: #f2c46d;
-  --color-on-accent: #1a1408;
-  --color-error: #f08a7e;
-  /* Chart bars. A deeper step of the accent: the accent itself is too light
-     for large fills on this dark surface (checked with a palette validator). */
-  --color-chart: #b8862f;
+  /* Surfaces: no warm or cool cast, so aqua and amber are the only hues. */
+  --color-bg: #0a0a0b;
+  --color-surface: #141415; /* cards */
+  --color-surface-2: #1c1c1e; /* raised parts inside a card */
+  --color-surface-3: #26262a; /* hover on surface-2 */
+  --color-glass: #1c1c1edb; /* chart tooltip, with a backdrop blur */
+  --color-backdrop: #000000b3; /* behind an open dialog */
 
-  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  /* Lines. Only the input border has to reach 3:1: an input is found by its edge. */
+  --color-border: #25252a;
+  --color-border-strong: #3a3a40;
+  --color-border-input: #6a6a70;
+
+  /* Text. "faint" is 3.6:1 — decoration only, never body text. */
+  --color-text: #f5f5f4;
+  --color-text-muted: #a1a1a6;
+  --color-text-faint: #6e6e73;
+
+  /* White is "selected": the pressed Chart/Table segment and the wrap card. */
+  --color-inverse: #f5f5f4;
+  --color-on-inverse: #0a0a0b;
+  --color-on-inverse-muted: #55555a;
+
+  /* Aqua, the projector's light. Text on an aqua fill is never white. */
+  --color-accent: #3ee3d2;
+  --color-accent-hover: #7dede2;
+  --color-accent-soft: #3ee3d21f;
+  --color-accent-line: #3ee3d266;
+  --color-on-accent: #0a0a0b;
+  --color-beam: #3ee3d28c;
+
+  /* Chart bars. A deeper step of the accent: the accent itself is too light
+     for large fills on this dark surface (checked with a palette validator:
+     lightness band, chroma floor, 6.3:1 on --color-surface). */
+  --color-chart: #23a99b;
+
+  /* Amber is only ever a rating. */
+  --color-star: #f5b544;
+
+  --color-error: #ff7a70;
+  --color-error-soft: #ff7a701f;
+
+  /* The mascot illustration. */
+  --color-mascot: #ecece8;
+  --color-mascot-metal: #3a3a40;
+
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -23,8 +64,23 @@
   --space-5: 40px;
   --space-6: 64px;
 
-  --radius: 12px;
-  --max-width: 960px;
+  --radius-sm: 8px; /* segments inside the Chart/Table switch */
+  --radius: 12px; /* buttons, inputs, notices, tooltips */
+  --radius-lg: 20px; /* cards, tiles, the dialog */
+  --radius-pill: 999px;
+
+  /* Cards are flat; only floating things cast a shadow, only aqua things glow. */
+  --shadow-pop: 0 24px 64px -16px #000000b3;
+  --glow-accent: 0 0 0 1px #3ee3d259, 0 0 32px #3ee3d240;
+  --glow-bar: 0 0 10px #3ee3d28c; /* used as filter: drop-shadow(var(--glow-bar)) */
+
+  --duration-fast: 120ms;
+  --duration: 200ms;
+  --duration-slow: 400ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --max-width: 1200px;
+  --stat-row-height: 2.75rem;
 
   color-scheme: dark;
 }
@@ -38,16 +94,9 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font: 16px/1.6 var(--font-body);
+  font: 15px/1.6 var(--font-body);
   color: var(--color-text);
-  background-color: var(--color-bg);
-  /* Soft spotlight from the top, like light falling on a cinema screen. */
-  background-image: radial-gradient(
-    ellipse 80% 50% at 50% 0%,
-    #2a2219 0%,
-    transparent 70%
-  );
-  background-repeat: no-repeat;
+  background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,8 +105,10 @@ h2,
 h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 p {
@@ -70,6 +121,27 @@ a {
 
 a:hover {
   color: var(--color-accent-hover);
+}
+
+/* One focus ring everywhere: 2px of aqua. The white wrap card switches it to
+   black through --focus-ring, because aqua on white is only 1.5:1. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--color-accent));
+  outline-offset: 2px;
+}
+
+/* People who ask for less motion get none: no spinning reels, no sliding
+   dialogs, no colour fades. Animations that matter are written inside
+   (prefers-reduced-motion: no-preference) anyway; this is the safety net. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .accent {
