@@ -58,6 +58,8 @@ The user is learning React and TypeScript. Therefore:
   `Mascot.tsx` — a projector with `mood: 'idle' | 'busy' | 'sad' | 'happy'`,
   decorative (`aria-hidden`), animated with CSS only. Icons are hand-drawn
   SVGs in `src/components/Icon.tsx` (`IconName` union), no icon package.
+  The logo and star path data live in `src/lib/shapes.ts`, shared by the
+  components and the share image's canvas.
 - The closing "That's a wrap." card (`WrapCard`) is deliberately quiet: no
   fill, hairline border, secondary button. It must not compete with the stats.
 - Tap targets are at least 24×24px (WCAG 2.5.8), links inside running text
@@ -167,6 +169,17 @@ The user is learning React and TypeScript. Therefore:
   In a year, "Latest ratings" becomes "Last watched" (`latestDiaryEntries`,
   by watch date): a rating's `Date` changes whenever the rating is edited,
   so it can point to a later year.
+- Share image (`ShareButton`, "Save image" beside the year picker): a
+  1080×1350 PNG of the year on screen, drawn by hand on a `<canvas>` in
+  `src/lib/shareImage.ts` from `shareSummary` (headline numbers as ticket
+  stubs, then top genre with ≥ `SUMMARY_MIN_GENRE_RATED` rated films, top
+  actor, top director). Title "My 2025 in film" / "My all-time stats" (you
+  post it, so "My"); footer: the site address and "Film data from TMDB".
+  Colours and font stacks are read from the CSS tokens at draw time. The
+  fonts are loaded first (`document.fonts.load` for the drawn text, then
+  `document.fonts.ready`) because a canvas doesn't wait for web fonts. Long
+  names shrink, then get "…" (`fitFontSize`, `truncateToWidth`). Saved as
+  `statsboxd-2025.png` / `statsboxd-all-time.png`.
 - Films = `watched` ∪ `ratings`, one entry per Letterboxd URI.
 - Per group: Films = watched films, Rated = rated films, Avg = average of the
   ratings (unrated films don't affect it).
@@ -211,7 +224,7 @@ The user is learning React and TypeScript. Therefore:
 - Everything that uses Recharts is behind `src/components/Results.tsx`, which
   `App` loads lazily (`React.lazy` + `Suspense`) and starts downloading as
   soon as a file is chosen. Initial JS ~362 KB (114 KB gzipped), the results
-  chunk ~381 KB (110 KB gzipped).
+  chunk ~388 KB (113 KB gzipped).
 
 ## Deploy (notes)
 
@@ -244,11 +257,8 @@ The user is learning React and TypeScript. Therefore:
    3. Remember the last export between visits ✓
    4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time ✓
    5. Privacy line on the upload screen, mobile check ✓
-   6. Shareable summary image — drawn by hand on a `<canvas>`, no library.
-      The data part is done: `shareSummary` in `stats.ts` (headline numbers,
-      top genre with ≥ `SUMMARY_MIN_GENRE_RATED` rated films, top actor,
-      top director). Left: the canvas drawing (wait for `document.fonts.ready`),
-      a "Save image" button on the results page, checks in the browser.
+   6. Shareable summary image ("Save image", drawn by hand on a `<canvas>`,
+      no library) ✓
 
 ## Commands
 

@@ -4,6 +4,7 @@ import type { LetterboxdExport } from '../lib/letterboxd.ts'
 import { diaryYears, filterByYear } from '../lib/stats.ts'
 import CrowdCard from './CrowdCard.tsx'
 import ExportSummary from './ExportSummary.tsx'
+import ShareButton from './ShareButton.tsx'
 import StatsSection from './StatsSection.tsx'
 import WrapCard from './WrapCard.tsx'
 import YearSelect from './YearSelect.tsx'
@@ -45,10 +46,13 @@ function Results({ data, tmdb, onRetry, onReset }: ResultsProps) {
             </p>
           )}
         </div>
-        {/* Without a diary there are no watch dates, so nothing to pick. */}
-        {years.length > 0 && (
-          <YearSelect years={years} value={year} onChange={setYear} />
-        )}
+        <div className="results-actions">
+          {/* Without a diary there are no watch dates, so nothing to pick. */}
+          {years.length > 0 && (
+            <YearSelect years={years} value={year} onChange={setYear} />
+          )}
+          <ShareButton data={view} tmdb={tmdb} year={year} />
+        </div>
       </div>
       <ExportSummary data={view} year={year} tmdb={tmdb} onRetry={onRetry} />
       <StatsSection data={view} tmdb={tmdb} />
