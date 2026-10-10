@@ -61,11 +61,22 @@ body:has(.modal[open]) {
   .modal[open] {
     animation: modal-in var(--duration) var(--ease-out);
   }
+
+  /* The room dims a little behind the dialog instead of going dark at once. */
+  .modal[open]::backdrop {
+    animation: backdrop-in var(--duration) var(--ease-out);
+  }
 }
 
 @keyframes modal-in {
   from {
     opacity: 0;
     transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
   }
 }

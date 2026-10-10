@@ -393,6 +393,7 @@ main {
 .film-name a {
   color: var(--color-text);
   text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .film-name a:hover {

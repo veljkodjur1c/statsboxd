@@ -157,6 +157,7 @@
   background: none;
   border: 0;
   cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .sort-button:hover,
@@ -188,6 +189,7 @@ th[aria-sort] .sort-button {
   background: none;
   border: 0;
   cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .row-button:hover {

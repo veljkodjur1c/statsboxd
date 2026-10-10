@@ -12,3 +12,31 @@
   font-size: 2rem;
   letter-spacing: -0.02em;
 }
+
+/* The results come up one block after another, like a reel starting. Only
+   transform and opacity move, so nothing reflows and the charts measure
+   their final size. */
+@media (prefers-reduced-motion: no-preference) {
+  .results > * {
+    animation: results-in var(--duration-slow) var(--ease-out) both;
+  }
+
+  .results > :nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .results > :nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .results > :nth-child(n + 4) {
+    animation-delay: 180ms;
+  }
+}
+
+@keyframes results-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
