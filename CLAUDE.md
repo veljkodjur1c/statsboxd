@@ -85,6 +85,9 @@ The user is learning React and TypeScript. Therefore:
     half-star steps)
   - `watched.csv`: `Date, Name, Year, Letterboxd URI`
   - `diary.csv`: `Date, Name, Year, Letterboxd URI, Rating, Rewatch, Tags, Watched Date`
+- In `diary.csv`, `Letterboxd URI` links to the diary entry, not the film, so
+  it never matches `watched.csv`. Diary entries are linked to films by name +
+  year instead (`parseDiary`); `Watched Date` is the day the film was seen.
 - Parsing lives in `src/lib/letterboxd.ts`.
 - The export has no TMDB IDs — films are matched via TMDB search by title + year.
 
@@ -130,6 +133,12 @@ The user is learning React and TypeScript. Therefore:
   `.stat-card` is a grid that reserves room for heading, 2-line description,
   header + 10 rows and the button, so collapsed cards are all the same height;
   rows have a fixed height and long names are ellipsized.
+- Year picker (`YearSelect`, native `<select>`, beside the results title):
+  "All time" or a year from the diary (`diaryYears`). `Results` narrows the
+  export with `filterByYear` and passes that to everything below it. A year
+  holds the films logged in the diary that year (a rewatch counts in each
+  year), with their current ratings; never-logged films are all-time only.
+  The picker is hidden when the diary is empty. TMDB notices stay all-time.
 - Films = `watched` ∪ `ratings`, one entry per Letterboxd URI.
 - Per group: Films = watched films, Rated = rated films, Avg = average of the
   ratings (unrated films don't affect it).
@@ -203,7 +212,7 @@ The user is learning React and TypeScript. Therefore:
 8. Feature expansion (branch `features`; the v2 design with v1 features is
    tag `v2.0`), one commit per step:
    1. Vitest + tests for `letterboxd.ts` and `stats.ts` ✓
-   2. Filter by year watched (`diary.csv` → `Watched Date`)
+   2. Filter by year watched (`diary.csv` → `Watched Date`) ✓
    3. Remember the last export between visits
    4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time
    5. Privacy line on the upload screen, mobile check

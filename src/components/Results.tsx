@@ -1,8 +1,11 @@
+import { useMemo, useState } from 'react'
 import type { EnrichResult } from '../lib/enrich.ts'
 import type { LetterboxdExport } from '../lib/letterboxd.ts'
+import { diaryYears, filterByYear } from '../lib/stats.ts'
 import ExportSummary from './ExportSummary.tsx'
 import StatsSection from './StatsSection.tsx'
 import WrapCard from './WrapCard.tsx'
+import YearSelect from './YearSelect.tsx'
 import './Results.css'
 
 type ResultsProps = {
@@ -19,14 +22,35 @@ type ResultsProps = {
  * is split off the same way and arrives together with them.
  */
 function Results({ data, tmdb, onRetry, onReset }: ResultsProps) {
+  const years = useMemo(() => diaryYears(data), [data])
+  const [year, setYear] = useState<number | null>(null) // null = all time
+
+  // Everything below works on this: the whole export, or one year of it.
+  const view = useMemo(
+    () => (year === null ? data : filterByYear(data, year)),
+    [data, year],
+  )
+
   return (
     <div className="results">
       <div className="results-title">
-        <p className="kicker">Now showing</p>
-        <h2>Your stats</h2>
+        <div className="results-heading">
+          <p className="kicker">Now showing</p>
+          <h2>{year === null ? 'Your stats' : `Your ${year}`}</h2>
+          {year !== null && (
+            <p className="results-note">
+              Films you logged in your diary in {year}, with the ratings they
+              have now.
+            </p>
+          )}
+        </div>
+        {/* Without a diary there are no watch dates, so nothing to pick. */}
+        {years.length > 0 && (
+          <YearSelect years={years} value={year} onChange={setYear} />
+        )}
       </div>
-      <ExportSummary data={data} tmdb={tmdb} onRetry={onRetry} />
-      <StatsSection data={data} tmdb={tmdb} />
+      <ExportSummary data={view} tmdb={tmdb} onRetry={onRetry} />
+      <StatsSection data={view} tmdb={tmdb} />
       <WrapCard onReset={onReset} />
     </div>
   )

@@ -1,0 +1,46 @@
+/* The year picker: a native <select> dressed as a secondary button, with a
+   calendar on the left and a chevron on the right (both drawn over it). */
+.year-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.year-select select {
+  height: 44px;
+  padding: 0 40px 0 42px;
+  font: 600 15px/1 var(--font-body);
+  color: var(--color-text);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  appearance: none; /* hides the browser's own arrow; ours is the chevron */
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.year-select select:hover {
+  background: var(--color-surface-3);
+}
+
+.year-select select:focus-visible {
+  outline-offset: 3px;
+}
+
+/* The icons sit on top of the select, so clicks must pass through them. */
+.year-select .icon {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.year-select .icon:first-of-type {
+  left: 14px;
+}
+
+.year-select .icon:last-of-type {
+  right: 14px;
+}

@@ -3,7 +3,17 @@
   gap: var(--space-4);
 }
 
+/* The heading on the left, the year picker on the right; on a narrow screen
+   the picker wraps under the heading. */
 .results-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.results-heading {
   display: grid;
   gap: var(--space-1);
 }
@@ -11,6 +21,10 @@
 .results-title h2 {
   font-size: 2rem;
   letter-spacing: -0.02em;
+}
+
+.results-note {
+  color: var(--color-text-muted);
 }
 
 /* The results come up one block after another, like a reel starting. Only

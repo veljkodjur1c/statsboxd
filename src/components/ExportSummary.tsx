@@ -30,8 +30,11 @@ function ExportSummary({ data, tmdb, onRetry }: ExportSummaryProps) {
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, LATEST_COUNT)
 
-  const matched = Object.keys(tmdb.byUri).length
-  const totalFilms = matched + tmdb.unmatched.length + tmdb.failed.length
+  // Counted over the films shown (all of them, or one year's), not over
+  // everything that was looked up on TMDB.
+  const uris = new Set([...watched, ...ratings].map((film) => film.letterboxdUri))
+  const totalFilms = uris.size
+  const matched = [...uris].filter((uri) => uri in tmdb.byUri).length
 
   return (
     <>
