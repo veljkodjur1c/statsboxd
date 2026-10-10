@@ -26,6 +26,15 @@ function Stars({ rating }: StarsProps) {
   )
 }
 
+/** One amber star as decoration next to a number (e.g. the average rating). */
+export function StarMark() {
+  return (
+    <span className="stars star-mark" aria-hidden="true">
+      <Star path={STAR} />
+    </span>
+  )
+}
+
 function Star({ path }: { path: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

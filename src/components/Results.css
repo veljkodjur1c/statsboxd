@@ -1,0 +1,14 @@
+.results {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.results-title {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.results-title h2 {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}

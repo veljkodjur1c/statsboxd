@@ -1,19 +1,23 @@
+import type { ReactNode } from 'react'
 import type { EnrichResult } from '../lib/enrich.ts'
-import { formatStars } from '../lib/format.ts'
+import { formatDate } from '../lib/format.ts'
 import type { Film, LetterboxdExport } from '../lib/letterboxd.ts'
 import { ratingDistribution } from '../lib/stats.ts'
 import RatingDistributionChart from './charts/RatingDistributionChart.tsx'
+import Icon, { type IconName } from './Icon.tsx'
+import Stars, { StarMark } from './Stars.tsx'
+import './ExportSummary.css'
 
 type ExportSummaryProps = {
   data: LetterboxdExport
   tmdb: EnrichResult
   onRetry: () => void
-  onReset: () => void
 }
 
 const LATEST_COUNT = 5
 
-function ExportSummary({ data, tmdb, onRetry, onReset }: ExportSummaryProps) {
+/** The top of the results: four headline numbers, notices, and how you rate. */
+function ExportSummary({ data, tmdb, onRetry }: ExportSummaryProps) {
   const { ratings, watched } = data
 
   const average =
@@ -30,93 +34,132 @@ function ExportSummary({ data, tmdb, onRetry, onReset }: ExportSummaryProps) {
   const totalFilms = matched + tmdb.unmatched.length + tmdb.failed.length
 
   return (
-    <section className="card">
-      <h2>Your export</h2>
-
-      <div className="stats-grid">
-        <Stat value={watched.length} label="Films watched" />
-        <Stat value={ratings.length} label="Films rated" />
-        <Stat
-          value={average === null ? '—' : `${average.toFixed(2)} ★`}
-          label="Average rating"
-        />
-        <Stat value={`${matched} / ${totalFilms}`} label="Matched on TMDB" />
+    <>
+      <div className="tiles">
+        <Tile label="Films watched" icon="eye">
+          {watched.length}
+        </Tile>
+        <Tile label="Films rated" icon="star">
+          {ratings.length}
+        </Tile>
+        <Tile label="Average rating" icon="gauge">
+          {average === null ? (
+            '—'
+          ) : (
+            <>
+              {average.toFixed(2)}
+              <StarMark />
+            </>
+          )}
+        </Tile>
+        <Tile label="Matched on TMDB" icon="check">
+          {matched}
+          <small>/ {totalFilms}</small>
+        </Tile>
       </div>
 
-      {ratings.length > 0 && (
-        <>
-          <h3>How you rate</h3>
-          <RatingDistributionChart bins={ratingDistribution(ratings)} />
-        </>
-      )}
-
-      {latest.length > 0 && (
-        <>
-          <h3>Latest ratings</h3>
-          <ol className="film-list">
-            {latest.map((film) => (
-              <li key={film.letterboxdUri}>
-                <span>
-                  {film.name}
-                  {film.year !== null && (
-                    <span className="film-year"> {film.year}</span>
-                  )}
-                </span>
-                <span
-                  className="film-rating"
-                  aria-label={`${film.rating} out of 5 stars`}
-                >
-                  {formatStars(film.rating)}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
-
-      {tmdb.unmatched.length > 0 && (
-        <details className="details">
-          <summary>{tmdb.unmatched.length} films not found on TMDB</summary>
-          <FilmNames films={tmdb.unmatched} />
-        </details>
-      )}
-
       {tmdb.failed.length > 0 && (
-        <div className="details">
-          <p className="error-message" role="alert">
+        <div className="notice notice--error" role="alert">
+          <Icon name="alert" />
+          <p className="notice-text">
             {tmdb.failed.length} films couldn’t be fetched from TMDB (network
             problem).
           </p>
-          <button type="button" className="button" onClick={onRetry}>
+          <button
+            type="button"
+            className="button button--secondary button--small"
+            onClick={onRetry}
+          >
+            <Icon name="refresh" />
             Retry
           </button>
         </div>
       )}
 
-      <button type="button" className="button button--secondary" onClick={onReset}>
-        Upload another export
-      </button>
-    </section>
+      {tmdb.unmatched.length > 0 && (
+        <details className="notice">
+          <summary>
+            <Icon name="info" />
+            <span className="notice-text">
+              {tmdb.unmatched.length} films not found on TMDB
+            </span>
+            <span className="notice-chevron">
+              <Icon name="chevron-down" />
+            </span>
+          </summary>
+          <FilmNames films={tmdb.unmatched} />
+        </details>
+      )}
+
+      {ratings.length > 0 && (
+        <div className="overview">
+          <section className="card">
+            <div className="card-header">
+              <div className="card-heading">
+                <p className="kicker">Rating spread</p>
+                <h3 className="card-title">How you rate</h3>
+              </div>
+              <p className="card-meta">
+                {ratings.length} {ratings.length === 1 ? 'rating' : 'ratings'}
+              </p>
+            </div>
+            <RatingDistributionChart bins={ratingDistribution(ratings)} />
+          </section>
+
+          <section className="card">
+            <div className="card-header">
+              <div className="card-heading">
+                <p className="kicker">Recent activity</p>
+                <h3 className="card-title">Latest ratings</h3>
+              </div>
+            </div>
+            <ol className="film-list latest-list">
+              {latest.map((film) => (
+                <li key={film.letterboxdUri}>
+                  <span className="film-name">
+                    {film.name}
+                    <span className="film-meta">
+                      {film.year !== null && `${film.year} · `}
+                      {formatDate(film.date)}
+                    </span>
+                  </span>
+                  <Stars rating={film.rating} />
+                </li>
+              ))}
+            </ol>
+          </section>
+        </div>
+      )}
+    </>
   )
 }
 
-type StatProps = {
-  value: string | number
+type TileProps = {
   label: string
+  icon: IconName
+  children: ReactNode // the number, plus anything that goes with it
 }
 
-function Stat({ value, label }: StatProps) {
+/** A ticket stub with one headline number. */
+function Tile({ label, icon, children }: TileProps) {
   return (
-    <div className="stat">
-      <span className="stat-value">{value}</span>
-      <span className="stat-label">{label}</span>
+    <div className="tile">
+      <div className="tile-head">
+        <span className="tile-label">{label}</span>
+        <span className="tile-icon">
+          <Icon name={icon} />
+        </span>
+      </div>
+      <div className="tile-body">
+        <span className="tile-value">{children}</span>
+      </div>
     </div>
   )
 }
 
 function FilmNames({ films }: { films: Film[] }) {
   return (
-    <ul className="plain-list">
+    <ul>
       {films.map((film) => (
         <li key={film.letterboxdUri}>
           {film.name}

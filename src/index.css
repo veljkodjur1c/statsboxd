@@ -356,36 +356,6 @@ main {
   margin-bottom: var(--space-3);
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-4) var(--space-3);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-}
-
-.stat-value {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--color-accent);
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-}
-
 /*
  * Film lists (latest ratings, the film list dialog): the name on the left,
  * the rating in a fixed column on the right. The stars are left-aligned in
@@ -550,32 +520,6 @@ main {
   background: var(--color-surface-2);
 }
 
-.details {
-  max-width: 520px;
-  margin: 0 auto var(--space-4);
-  text-align: left;
-}
-
-.details summary {
-  cursor: pointer;
-  color: var(--color-text-muted);
-}
-
-.details:is(div) {
-  text-align: center;
-}
-
-.details .error-message {
-  margin: 0 auto var(--space-3);
-}
-
-.plain-list {
-  margin: var(--space-2) 0 0;
-  padding-left: var(--space-4);
-  max-height: 240px;
-  overflow-y: auto;
-}
-
 /* Statistics */
 
 .stats-section {
@@ -588,7 +532,6 @@ main {
 
 .stats-note {
   grid-column: 1 / -1;
-  text-align: center;
   color: var(--color-text-muted);
 }
 

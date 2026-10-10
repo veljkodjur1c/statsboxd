@@ -1,0 +1,223 @@
+/* Ticket tiles: the four headline numbers. */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.tile {
+  --tile-head: 56px;
+  --notch: 9px;
+  display: grid;
+  grid-template-rows: var(--tile-head) auto;
+  min-width: 0;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  /* Two semicircles cut out where the stub tears off, one per half: each
+     half of the mask is a radial gradient that is see-through only inside
+     its notch. */
+  mask:
+    radial-gradient(circle var(--notch) at 0 var(--tile-head), #0000 96%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% var(--tile-head), #0000 96%, #000) right / 51% 100% no-repeat;
+}
+
+.tile-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 10px 0 var(--space-3);
+  font: 600 15px/1.15 var(--font-body);
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+/* The perforation along the tear line. */
+.tile-head::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--notch) + 6px);
+  right: calc(var(--notch) + 6px);
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-bg) 0 5px, transparent 5px) 0 0 / 9px 2px repeat-x;
+}
+
+.tile-label {
+  min-width: 0;
+}
+
+.tile-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  color: var(--color-accent);
+  background: var(--color-on-accent);
+  border-radius: 50%;
+}
+
+.tile-icon .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.tile-body {
+  padding: var(--space-3) var(--space-3) 20px;
+}
+
+/* Big standalone numbers keep proportional figures. */
+.tile-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font: 400 44px/46px var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.tile-value small {
+  font-size: 20px;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+
+.star-mark svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Notices under the tiles. */
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.notice-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notice .icon {
+  color: var(--color-text-muted);
+}
+
+.notice--error {
+  background: var(--color-error-soft);
+  border-color: transparent;
+}
+
+.notice--error > .icon {
+  color: var(--color-error);
+}
+
+.notice--error .button .icon {
+  color: inherit;
+}
+
+details.notice {
+  display: block;
+}
+
+details.notice summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  list-style: none;
+  cursor: pointer;
+}
+
+details.notice summary::-webkit-details-marker {
+  display: none;
+}
+
+.notice-chevron {
+  display: inline-grid;
+  transition: transform var(--duration) var(--ease-out);
+}
+
+details.notice[open] .notice-chevron {
+  transform: rotate(180deg);
+}
+
+details.notice ul {
+  max-height: 200px;
+  margin: var(--space-2) 0 0;
+  padding: 0 0 0 32px;
+  overflow-y: auto;
+  color: var(--color-text-muted);
+}
+
+.film-year {
+  font: 400 12px/16px var(--font-mono);
+}
+
+/* "How you rate" (two thirds) beside "Latest ratings" (one third). */
+
+.overview {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+/* The grid stretches both cards to the taller one; the histogram takes up
+   the extra height instead of leaving a gap under it. */
+.overview > .card {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview .rating-chart {
+  flex: 1;
+  height: auto;
+  min-height: 200px;
+  margin: var(--space-3) 0 0;
+}
+
+.latest-list {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 960px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 440px) {
+  .tile-head {
+    padding-left: 12px;
+    font-size: 13px;
+  }
+
+  .tile-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .tile-body {
+    padding: 12px;
+  }
+
+  .tile-value {
+    font-size: 34px;
+    line-height: 38px;
+  }
+
+  .tile-value small {
+    font-size: 16px;
+  }
+}
