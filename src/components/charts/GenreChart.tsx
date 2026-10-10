@@ -15,6 +15,7 @@ import {
   ANIMATE,
   AXIS_TICK,
   BAR_ACTIVE,
+  CATEGORY_TICK,
   BAR_FILL,
   GRID_STROKE,
   HOVER_CURSOR,
@@ -32,7 +33,7 @@ function GenreChart({ rows, average, onSelect }: GenreChartProps) {
   return (
     <>
       {average !== null && <AverageKey average={average} />}
-      <div className="chart-plot">
+      <div className="chart-plot genre-chart">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={rows}
@@ -54,7 +55,7 @@ function GenreChart({ rows, average, onSelect }: GenreChartProps) {
               dataKey="label"
               width={112}
               interval={0}
-              tick={AXIS_TICK}
+              tick={CATEGORY_TICK}
               axisLine={{ stroke: GRID_STROKE }}
               tickLine={false}
             />

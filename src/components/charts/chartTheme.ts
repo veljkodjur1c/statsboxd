@@ -1,13 +1,18 @@
 // Shared look for every chart. Colors are CSS variables from index.css, so
-// the charts follow the same design tokens as the rest of the app.
+// the charts follow the same design tokens as the rest of the app. The rest
+// of the look (mono axis font, glow, tooltip) is CSS in charts.css.
+import './charts.css'
 
-/** Axis labels: small, muted text — never the bar color. */
-export const AXIS_TICK = { fill: 'var(--color-text-muted)', fontSize: 12 }
+/** Axis numbers: small, muted text — never the bar color. */
+export const AXIS_TICK = { fill: 'var(--color-text-muted)', fontSize: 11 }
+
+/** Category names written out as words (genres) are a touch larger. */
+export const CATEGORY_TICK = { ...AXIS_TICK, fontSize: 12 }
 
 /** Hairline, solid gridlines one step off the surface. */
 export const GRID_STROKE = 'var(--color-border)'
 
-/** Bars use a deeper gold; the hovered bar lights up to the accent. */
+/** Bars use a deeper aqua; the hovered bar lights up to the accent. */
 export const BAR_FILL = 'var(--color-chart)'
 export const BAR_ACTIVE = { fill: 'var(--color-accent)' }
 

@@ -6,7 +6,7 @@ type WrapCardProps = {
   onReset: () => void
 }
 
-/** The white closing card at the end of the results. */
+/** The quiet closing credits at the end of the results. */
 function WrapCard({ onReset }: WrapCardProps) {
   return (
     <section className="wrap-card">
@@ -16,7 +16,7 @@ function WrapCard({ onReset }: WrapCardProps) {
         <h3 className="wrap-card-title">That’s a wrap.</h3>
         <p className="wrap-card-text">Got a newer export? Run it through again.</p>
       </div>
-      <button type="button" className="button" onClick={onReset}>
+      <button type="button" className="button button--secondary" onClick={onReset}>
         <Icon name="rewind" />
         Upload another export
       </button>

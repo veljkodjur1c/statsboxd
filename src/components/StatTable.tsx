@@ -7,12 +7,15 @@ import {
   type SortKey,
 } from '../lib/stats.ts'
 import FilmListDialog from './FilmListDialog.tsx'
+import Icon, { type IconName } from './Icon.tsx'
+import './StatTable.css'
 
 // Every table shows this many rows until "Show all" is clicked. The CSS
 // (.stat-card) reserves exactly this much room, so collapsed cards line up.
 const VISIBLE_ROWS = 10
 
 type StatTableProps = {
+  kicker: string // small label above the title, e.g. "Reel 01 · Genres"
   title: string
   description: string
   nameLabel: string // header of the first column, e.g. "Genre"
@@ -31,6 +34,7 @@ type Sort = {
 type View = 'chart' | 'table'
 
 function StatTable({
+  kicker,
   title,
   description,
   nameLabel,
@@ -62,8 +66,16 @@ function StatTable({
 
   return (
     <section className="card stat-card">
-      <h2>{title}</h2>
-      <p>{description}</p>
+      <div className="card-header">
+        <div className="card-heading">
+          <p className="kicker">{kicker}</p>
+          <h2 className="card-title">{title}</h2>
+        </div>
+        {renderChart && rows.length > 0 && (
+          <ViewToggle view={view} onChange={setView} />
+        )}
+      </div>
+      <p className="card-description">{description}</p>
 
       {rows.length === 0 ? (
         <p className="empty-note">Not enough rated films yet.</p>
@@ -105,9 +117,6 @@ function StatTable({
 
       {/* Always rendered, so every card keeps the same footer row. */}
       <div className="stat-card-footer">
-        {renderChart && rows.length > 0 && (
-          <ViewToggle view={view} onChange={setView} />
-        )}
         {view === 'table' && rows.length > VISIBLE_ROWS && (
           <button
             type="button"
@@ -137,9 +146,9 @@ type ViewToggleProps = {
 
 /** Two-button switch between the chart and the table. */
 function ViewToggle({ view, onChange }: ViewToggleProps) {
-  const options: { value: View; label: string }[] = [
-    { value: 'chart', label: 'Chart' },
-    { value: 'table', label: 'Table' },
+  const options: { value: View; label: string; icon: IconName }[] = [
+    { value: 'chart', label: 'Chart', icon: 'chart' },
+    { value: 'table', label: 'Table', icon: 'table' },
   ]
   return (
     <div className="view-toggle" role="group" aria-label="View as">
@@ -150,6 +159,7 @@ function ViewToggle({ view, onChange }: ViewToggleProps) {
           aria-pressed={view === option.value}
           onClick={() => onChange(option.value)}
         >
+          <Icon name={option.icon} />
           {option.label}
         </button>
       ))}
@@ -172,8 +182,9 @@ function SortHeader({ column, label, sort, onSort }: SortHeaderProps) {
     <th scope="col" aria-sort={active ? ariaSort : undefined}>
       <button type="button" className="sort-button" onClick={() => onSort(column)}>
         {label}
-        <span className="sort-arrow" aria-hidden="true">
-          {active ? (sort.direction === 'asc' ? '▲' : '▼') : ''}
+        {/* Always there (empty when inactive), so the label doesn't shift. */}
+        <span className="sort-arrow">
+          {active && <Icon name={sort.direction === 'asc' ? 'arrow-up' : 'arrow-down'} />}
         </span>
       </button>
     </th>

@@ -1,0 +1,82 @@
+/* Shared chart styles. chartTheme.ts imports this file, so every chart that
+   uses the theme brings its CSS along. */
+
+.chart-plot {
+  flex: 1;
+  min-height: 0;
+}
+
+.rating-chart {
+  height: 200px;
+}
+
+/* Axis numbers in mono, like the edge print on film stock. Category names
+   (genres) stay in the body font, which reads better as words. CSS beats
+   the attributes Recharts writes, so the font is set here. */
+.recharts-cartesian-axis-tick-value {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.genre-chart .recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value {
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+
+/* The hovered bar lights up in the accent (chartTheme) and glows. */
+.recharts-active-bar {
+  filter: drop-shadow(var(--glow-bar));
+}
+
+/* Explains the overall-average line, above the plot. */
+.chart-key {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  font: 400 11px/16px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.chart-key-line {
+  width: 16px;
+  border-top: 1px solid var(--color-text-muted);
+}
+
+/* Glass tooltip: the value first, in the display font. */
+.chart-tooltip {
+  display: grid;
+  gap: 2px;
+  min-width: 148px;
+  padding: 10px 12px;
+  background: var(--color-glass);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+}
+
+.chart-tooltip strong {
+  font: 500 20px/24px var(--font-display);
+  color: var(--color-text);
+}
+
+.chart-tooltip span {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--color-text-muted);
+}
+
+.chart-tooltip .chart-tooltip-detail {
+  font: 400 11px/16px var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+/* Recharts makes the chart focusable for keyboard users; only show the
+   focus ring for keyboard focus, not after a mouse click. */
+.recharts-wrapper :focus:not(:focus-visible),
+.recharts-surface:focus:not(:focus-visible) {
+  outline: none;
+}
