@@ -13,9 +13,16 @@ export type RatedFilm = Film & {
   rating: number // 0.5–5 in half-star steps
 }
 
+/** One diary log: which film you watched, and when. */
+export type DiaryEntry = {
+  letterboxdUri: string // the film's URI, as in watched.csv (see parseDiary)
+  watchedDate: string // "YYYY-MM-DD"
+}
+
 export type LetterboxdExport = {
   ratings: RatedFilm[]
   watched: Film[]
+  diary: DiaryEntry[]
 }
 
 type CsvRow = Record<string, string>
@@ -39,6 +46,7 @@ export async function parseLetterboxdExport(
     throw new Error('No ratings.csv found — is this a Letterboxd export?')
   }
   const watchedCsv = await readZipFile(zip, 'watched.csv')
+  const diaryCsv = await readZipFile(zip, 'diary.csv')
 
   const ratings = parseCsv(ratingsCsv, 'ratings.csv', [...FILM_COLUMNS, 'Rating'])
     .map(toRatedFilm)
@@ -49,7 +57,33 @@ export async function parseLetterboxdExport(
       ? []
       : parseCsv(watchedCsv, 'watched.csv', FILM_COLUMNS).map(toFilm)
 
-  return { ratings, watched }
+  const diary =
+    diaryCsv === null ? [] : parseDiary(diaryCsv, [...watched, ...ratings])
+
+  return { ratings, watched, diary }
+}
+
+const titleKey = (film: Film) => `${film.name}|${film.year}`
+
+/**
+ * In diary.csv, "Letterboxd URI" links to the diary entry, not to the film,
+ * so it never matches watched.csv. Name + year does, so each entry gets the
+ * URI of the film with the same name and year. Entries for a film that isn't
+ * in watched.csv or ratings.csv are dropped.
+ */
+function parseDiary(text: string, films: Film[]): DiaryEntry[] {
+  const uriByTitle = new Map(films.map((film) => [titleKey(film), film.letterboxdUri]))
+  const entries: DiaryEntry[] = []
+  for (const row of parseCsv(text, 'diary.csv', [...FILM_COLUMNS, 'Watched Date'])) {
+    const letterboxdUri = uriByTitle.get(titleKey(toFilm(row)))
+    // Watched Date is the day you saw it; Date (the day you logged it) is
+    // only a fallback for a row without one.
+    const watchedDate = row['Watched Date'] || row['Date']
+    if (letterboxdUri !== undefined && watchedDate) {
+      entries.push({ letterboxdUri, watchedDate })
+    }
+  }
+  return entries
 }
 
 async function readZipFile(zip: JSZip, path: string): Promise<string | null> {

@@ -54,6 +54,33 @@ export function ratingDistribution(ratings: { rating: number }[]): RatingBin[] {
   return bins
 }
 
+const yearOf = (date: string) => Number(date.slice(0, 4))
+
+/** Years you logged a film in your diary, newest first. */
+export function diaryYears(data: LetterboxdExport): number[] {
+  const years = new Set(data.diary.map((entry) => yearOf(entry.watchedDate)))
+  return [...years].filter((year) => year > 0).sort((a, b) => b - a)
+}
+
+/**
+ * The export narrowed to the films you logged in your diary in `year`. Only
+ * the diary has watch dates, so films that were never logged drop out. A film
+ * watched in several years counts in each of them. Ratings stay your current
+ * ones (from ratings.csv), not the rating you gave on that day.
+ */
+export function filterByYear(
+  data: LetterboxdExport,
+  year: number,
+): LetterboxdExport {
+  const diary = data.diary.filter((entry) => yearOf(entry.watchedDate) === year)
+  const uris = new Set(diary.map((entry) => entry.letterboxdUri))
+  return {
+    ratings: data.ratings.filter((film) => uris.has(film.letterboxdUri)),
+    watched: data.watched.filter((film) => uris.has(film.letterboxdUri)),
+    diary,
+  }
+}
+
 // A group needs this many rated films to be listed, so that a single 5★ film
 // doesn't make someone your top actor.
 export const MIN_RATED = {

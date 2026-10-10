@@ -47,9 +47,34 @@ describe('parseLetterboxdExport', () => {
     expect(data.ratings.map((film) => film.name)).not.toContain('Deleted')
   })
 
-  it('works without watched.csv', async () => {
+  it('works without watched.csv or diary.csv', async () => {
     const data = await parseLetterboxdExport(await makeZip({ 'ratings.csv': RATINGS_CSV }))
     expect(data.watched).toEqual([])
+    expect(data.diary).toEqual([])
+  })
+
+  it('links diary entries to films by name and year', async () => {
+    // Diary URIs point to the diary entry, so they never match the film's URI.
+    const diaryCsv = `Date,Name,Year,Letterboxd URI,Rating,Rewatch,Tags,Watched Date
+2025-01-02,Heat,1995,https://boxd.it/entry1,4.5,,,2025-01-01
+2026-03-04,Heat,1995,https://boxd.it/entry2,4.5,Yes,,2026-03-03
+2025-05-06,Unrated Film,2010,https://boxd.it/entry3,,,,
+2025-06-07,Heat,1986,https://boxd.it/entry4,3,,,2025-06-07
+`
+    const data = await parseLetterboxdExport(
+      await makeZip({
+        'ratings.csv': RATINGS_CSV,
+        'watched.csv': WATCHED_CSV,
+        'diary.csv': diaryCsv,
+      }),
+    )
+    expect(data.diary).toEqual([
+      { letterboxdUri: 'https://boxd.it/a', watchedDate: '2025-01-01' },
+      { letterboxdUri: 'https://boxd.it/a', watchedDate: '2026-03-03' },
+      // No Watched Date: falls back to the day it was logged.
+      { letterboxdUri: 'https://boxd.it/e', watchedDate: '2025-05-06' },
+      // "Heat (1986)" isn't in watched.csv or ratings.csv, so it's dropped.
+    ])
   })
 
   it('rejects a file that is not a ZIP', async () => {

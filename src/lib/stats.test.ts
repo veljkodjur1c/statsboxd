@@ -3,6 +3,8 @@ import type { EnrichResult } from './enrich.ts'
 import type { Film, LetterboxdExport, RatedFilm } from './letterboxd.ts'
 import {
   computeStats,
+  diaryYears,
+  filterByYear,
   ratingDistribution,
   sortGroups,
   type GroupStat,
@@ -17,6 +19,11 @@ function film(id: string, year: number | null = 2000): Film {
 
 function rated(id: string, rating: number, year: number | null = 2000): RatedFilm {
   return { ...film(id, year), rating }
+}
+
+/** An export with only the parts a test cares about; the rest are empty. */
+function exportOf(parts: Partial<LetterboxdExport>): LetterboxdExport {
+  return { ratings: [], watched: [], diary: [], ...parts }
 }
 
 function tmdbFilm(
@@ -82,14 +89,61 @@ describe('sortGroups', () => {
   })
 })
 
+// --- Years -------------------------------------------------------------------
+
+describe('diaryYears', () => {
+  it('lists each year once, newest first', () => {
+    const data = exportOf({
+      diary: [
+        { letterboxdUri: 'a', watchedDate: '2024-05-01' },
+        { letterboxdUri: 'b', watchedDate: '2026-01-02' },
+        { letterboxdUri: 'c', watchedDate: '2024-12-31' },
+      ],
+    })
+    expect(diaryYears(data)).toEqual([2026, 2024])
+  })
+
+  it('is empty without a diary', () => {
+    expect(diaryYears(exportOf({ watched: [film('a')] }))).toEqual([])
+  })
+})
+
+describe('filterByYear', () => {
+  const data = exportOf({
+    ratings: [rated('a', 4), rated('b', 2)],
+    watched: [film('a'), film('b'), film('c'), film('never-logged')],
+    diary: [
+      { letterboxdUri: 'a', watchedDate: '2025-03-01' },
+      { letterboxdUri: 'b', watchedDate: '2026-07-01' },
+      { letterboxdUri: 'c', watchedDate: '2025-11-20' },
+      { letterboxdUri: 'a', watchedDate: '2026-02-14' }, // a rewatch
+    ],
+  })
+
+  it('keeps only films logged in that year', () => {
+    const year = filterByYear(data, 2025)
+    expect(year.watched.map((f) => f.letterboxdUri)).toEqual(['a', 'c'])
+    expect(year.ratings.map((f) => f.letterboxdUri)).toEqual(['a'])
+    expect(year.diary).toHaveLength(2)
+  })
+
+  it('counts a rewatched film in each year', () => {
+    expect(filterByYear(data, 2026).watched.map((f) => f.letterboxdUri)).toEqual(['a', 'b'])
+  })
+
+  it('is empty for a year with no diary entries', () => {
+    expect(filterByYear(data, 1999)).toEqual(exportOf({}))
+  })
+})
+
 // --- computeStats ------------------------------------------------------------
 
 describe('computeStats', () => {
   it('counts each film once, even if it is both watched and rated', () => {
-    const data: LetterboxdExport = {
+    const data = exportOf({
       ratings: [rated('a', 4)],
       watched: [film('a'), film('b')],
-    }
+    })
     const stats = computeStats(data, enriched({}))
     expect(stats.totalFilms).toBe(2)
     expect(stats.matchedFilms).toBe(0)
@@ -97,10 +151,10 @@ describe('computeStats', () => {
   })
 
   it('averages only rated films', () => {
-    const data: LetterboxdExport = {
+    const data = exportOf({
       ratings: [rated('a', 4), rated('b', 2)],
       watched: [film('a'), film('b'), film('c')],
-    }
+    })
     const drama = tmdbFilm(['Drama'])
     const stats = computeStats(data, enriched({ a: drama, b: drama, c: drama }))
 
@@ -110,10 +164,7 @@ describe('computeStats', () => {
   })
 
   it('leaves films not found on TMDB out of genres, but not out of decades', () => {
-    const data: LetterboxdExport = {
-      ratings: [rated('a', 5, 1995), rated('b', 3, 2004)],
-      watched: [],
-    }
+    const data = exportOf({ ratings: [rated('a', 5, 1995), rated('b', 3, 2004)] })
     const stats = computeStats(data, enriched({ a: tmdbFilm(['Crime']) }))
 
     expect(labels(stats.genres)).toEqual(['Crime'])
@@ -121,15 +172,12 @@ describe('computeStats', () => {
   })
 
   it('skips films without a year in the decades', () => {
-    const data: LetterboxdExport = { ratings: [rated('a', 3, null)], watched: [] }
+    const data = exportOf({ ratings: [rated('a', 3, null)] })
     expect(computeStats(data, enriched({})).decades).toEqual([])
   })
 
   it('lists actors only with at least 3 rated films', () => {
-    const data: LetterboxdExport = {
-      ratings: [rated('a', 5), rated('b', 4), rated('c', 3)],
-      watched: [],
-    }
+    const data = exportOf({ ratings: [rated('a', 5), rated('b', 4), rated('c', 3)] })
     const stats = computeStats(
       data,
       enriched({
@@ -143,10 +191,7 @@ describe('computeStats', () => {
   })
 
   it('counts a person once per film, even if listed twice', () => {
-    const data: LetterboxdExport = {
-      ratings: [rated('a', 5), rated('b', 3)],
-      watched: [],
-    }
+    const data = exportOf({ ratings: [rated('a', 5), rated('b', 3)] })
     const stats = computeStats(
       data,
       enriched({ a: tmdbFilm([], [], [bob, bob]), b: tmdbFilm([], [], [bob]) }),
@@ -155,7 +200,7 @@ describe('computeStats', () => {
   })
 
   it('has no average rating without ratings', () => {
-    const data: LetterboxdExport = { ratings: [], watched: [film('a')] }
+    const data = exportOf({ watched: [film('a')] })
     expect(computeStats(data, enriched({})).averageRating).toBeNull()
   })
 })
