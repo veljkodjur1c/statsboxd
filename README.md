@@ -8,6 +8,10 @@ are spread. It runs entirely in your browser.
 
 ## Features
 
+- **Headline numbers**: films watched, films rated, average rating and total
+  watch time (from TMDB runtimes).
+- **Filter by year**: see the stats for any year from your diary, or all
+  time.
 - **How you rate**: a histogram of your ratings, from ½★ to 5★.
 - **Average rating by genre** and **by decade**, each as a chart or a table.
 - **Top actors** and **top directors** by your average rating.
@@ -15,7 +19,12 @@ are spread. It runs entirely in your browser.
   direction.
 - Click any name or bar to see every film behind it, with your rating and a
   link to Letterboxd.
-- Film details are cached in your browser, so a second upload is instant.
+- **You vs. the crowd**: your ratings next to the TMDB average, with the
+  films you liked most above and most below everyone else.
+- **Save image**: a shareable 1080×1350 summary of the year (or all time),
+  drawn in the browser.
+- Your last export is remembered, so you can come back without uploading it
+  again, and film details are cached, so a second upload is instant.
 
 ## How to use
 
@@ -32,8 +41,9 @@ are spread. It runs entirely in your browser.
 
 - Your ZIP file is read in your browser and is never uploaded anywhere.
 - Only each film's title and year are sent to TMDB, to look it up.
-- The TMDB cache, and your own TMDB key if you enter one, are stored in your
-  browser's local storage. Nothing is kept anywhere else.
+- Your last export, the TMDB cache, and your own TMDB key if you enter one,
+  are stored in your browser's local storage. "Forget it" on the upload
+  screen removes the saved export. Nothing is kept anywhere else.
 
 ## About the TMDB key
 
@@ -71,6 +81,7 @@ Other commands:
 | `npm run build` | Type-checks and builds the site into `dist/` |
 | `npm run preview` | Serves the build at http://localhost:4173/statsboxd/ |
 | `npm run lint` | Lints the code with oxlint |
+| `npm test` | Runs the unit tests (Vitest) |
 
 A local build includes the token from `.env.local`, so don't share or upload
 your local `dist/` folder.
@@ -79,7 +90,7 @@ your local `dist/` folder.
 
 Every push to `main` runs
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It lints,
-builds and publishes the site to GitHub Pages. You can also start it by hand
+tests, builds and publishes the site to GitHub Pages. You can also start it by hand
 from the **Actions** tab. Requirements:
 
 - The repository is public. Free GitHub Pages only works for public repos.
@@ -92,12 +103,14 @@ from the **Actions** tab. Requirements:
 ## Tech stack
 
 React 19, TypeScript and Vite, plus JSZip (reading the ZIP), PapaParse
-(CSV), Recharts (charts) and plain CSS.
+(CSV), Recharts (charts) and plain CSS. The share image is drawn with the
+Canvas API, without a library. Tests use Vitest.
 
 ```
 src/
   index.css     design tokens, base styles and shared parts (cards, buttons)
-  lib/          pure logic: parsing the export, TMDB calls and cache, statistics
+  lib/          pure logic: parsing the export, TMDB calls and cache, statistics,
+                the share image (with *.test.ts files next to the code)
   components/   React components, each with its own CSS file next to it
     brand/      the logo and the projector mascot
     charts/     the Recharts charts and their shared styling
@@ -108,8 +121,11 @@ src/
 The look is a dark projection room: near-black surfaces, aqua (the
 projector's light) for everything you can act on, and amber only for your
 ratings. Headings use Bricolage Grotesque, small labels JetBrains Mono. A
-little projector mascot shows what the app is doing. The first version, with
-a gold theme, is kept as the `v1.0` tag.
+little projector mascot shows what the app is doing.
+
+Versions are tagged: `v1.0` is the first version (gold theme), `v2.0` the
+redesign, `v3.0` the redesign plus the features above (year filter, saved
+export, watch time, crowd comparison, share image).
 
 ## Credits
 

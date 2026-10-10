@@ -250,8 +250,9 @@ The user is learning React and TypeScript. Therefore:
 6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions) ✓
 7. v2 redesign: design system, brand and mascot, every screen restyled
    (branch `redesign`; v1 kept as tag `v1.0`) ✓
-8. Feature expansion (branch `features`; the v2 design with v1 features is
-   tag `v2.0`), one commit per step:
+8. Feature expansion (branch `features`, merged to `main`; the v2 design
+   with v1 features is tag `v2.0`, the result is tag `v3.0`) ✓, one commit
+   per step:
    1. Vitest + tests for `letterboxd.ts` and `stats.ts` ✓
    2. Filter by year watched (`diary.csv` → `Watched Date`) ✓
    3. Remember the last export between visits ✓
