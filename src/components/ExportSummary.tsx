@@ -2,14 +2,19 @@ import type { ReactNode } from 'react'
 import type { EnrichResult } from '../lib/enrich.ts'
 import { formatDate } from '../lib/format.ts'
 import type { Film, LetterboxdExport } from '../lib/letterboxd.ts'
-import { ratingDistribution } from '../lib/stats.ts'
+import {
+  latestDiaryEntries,
+  latestRatings,
+  ratingDistribution,
+} from '../lib/stats.ts'
 import RatingDistributionChart from './charts/RatingDistributionChart.tsx'
 import Icon, { type IconName } from './Icon.tsx'
 import Stars, { StarMark } from './Stars.tsx'
 import './ExportSummary.css'
 
 type ExportSummaryProps = {
-  data: LetterboxdExport
+  data: LetterboxdExport // the whole export, or one year of it
+  year: number | null // the year `data` was narrowed to; null = all time
   tmdb: EnrichResult
   onRetry: () => void
 }
@@ -17,7 +22,7 @@ type ExportSummaryProps = {
 const LATEST_COUNT = 5
 
 /** The top of the results: four headline numbers, notices, and how you rate. */
-function ExportSummary({ data, tmdb, onRetry }: ExportSummaryProps) {
+function ExportSummary({ data, year, tmdb, onRetry }: ExportSummaryProps) {
   const { ratings, watched } = data
 
   const average =
@@ -25,10 +30,13 @@ function ExportSummary({ data, tmdb, onRetry }: ExportSummaryProps) {
       ? ratings.reduce((sum, film) => sum + film.rating, 0) / ratings.length
       : null
 
-  // Dates are "YYYY-MM-DD", so comparing them as strings orders them by time.
-  const latest = [...ratings]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, LATEST_COUNT)
+  // All time: what you rated last. One year: what you watched last that year,
+  // from the diary. (A rating's date moves whenever you change it, so in a
+  // year view it could point to a later year.)
+  const latest =
+    year === null
+      ? latestRatings(data, LATEST_COUNT)
+      : latestDiaryEntries(data, LATEST_COUNT)
 
   // Counted over the films shown (all of them, or one year's), not over
   // everything that was looked up on TMDB.
@@ -112,13 +120,18 @@ function ExportSummary({ data, tmdb, onRetry }: ExportSummaryProps) {
           <section className="card">
             <div className="card-header">
               <div className="card-heading">
-                <p className="kicker">Recent activity</p>
-                <h3 className="card-title">Latest ratings</h3>
+                <p className="kicker">
+                  {year === null ? 'Recent activity' : `Diary · ${year}`}
+                </p>
+                <h3 className="card-title">
+                  {year === null ? 'Latest ratings' : 'Last watched'}
+                </h3>
               </div>
             </div>
             <ol className="film-list latest-list">
               {latest.map((film) => (
-                <li key={film.letterboxdUri}>
+                // A rewatch can list a film twice, so the date is in the key.
+                <li key={`${film.letterboxdUri} ${film.date}`}>
                   <span className="film-name">
                     {film.name}
                     <span className="film-meta">
@@ -126,7 +139,11 @@ function ExportSummary({ data, tmdb, onRetry }: ExportSummaryProps) {
                       {formatDate(film.date)}
                     </span>
                   </span>
-                  <Stars rating={film.rating} />
+                  {film.rating === null ? (
+                    <span className="film-unrated">Not rated</span>
+                  ) : (
+                    <Stars rating={film.rating} />
+                  )}
                 </li>
               ))}
             </ol>

@@ -81,6 +81,58 @@ export function filterByYear(
   }
 }
 
+/** A film in a "latest" list, with the day that put it there. */
+export type DatedFilm = GroupFilm & {
+  date: string // "YYYY-MM-DD"
+}
+
+// Dates are "YYYY-MM-DD", so comparing them as strings orders them by time.
+const newestFirst = (a: DatedFilm, b: DatedFilm) => b.date.localeCompare(a.date)
+
+/**
+ * The films you rated most recently. The date is the last time the rating
+ * was set or changed, so re-rating an old film brings it back to the top.
+ */
+export function latestRatings(data: LetterboxdExport, count: number): DatedFilm[] {
+  // A copy, because sort() reorders the array it's called on.
+  return [...data.ratings].sort(newestFirst).slice(0, count)
+}
+
+/**
+ * The films you watched most recently, by your diary: one row per diary
+ * entry (a rewatch can appear twice), dated by the day you watched it, with
+ * the rating the film has now.
+ */
+export function latestDiaryEntries(
+  data: LetterboxdExport,
+  count: number,
+): DatedFilm[] {
+  const films = new Map<string, Film>()
+  for (const film of [...data.watched, ...data.ratings]) {
+    films.set(film.letterboxdUri, film)
+  }
+  const ratingByUri = new Map(
+    data.ratings.map((film) => [film.letterboxdUri, film.rating]),
+  )
+
+  const entries: DatedFilm[] = []
+  for (const entry of data.diary) {
+    const film = films.get(entry.letterboxdUri)
+    if (film !== undefined) {
+      entries.push({
+        letterboxdUri: film.letterboxdUri,
+        name: film.name,
+        year: film.year,
+        rating: ratingByUri.get(film.letterboxdUri) ?? null,
+        date: entry.watchedDate,
+      })
+    }
+  }
+  // The diary is in the order you logged it; reversed first, so entries
+  // watched on the same day keep the last-logged one on top (sort is stable).
+  return entries.reverse().sort(newestFirst).slice(0, count)
+}
+
 // A group needs this many rated films to be listed, so that a single 5★ film
 // doesn't make someone your top actor.
 export const MIN_RATED = {

@@ -5,6 +5,8 @@ import {
   computeStats,
   diaryYears,
   filterByYear,
+  latestDiaryEntries,
+  latestRatings,
   ratingDistribution,
   sortGroups,
   type GroupStat,
@@ -133,6 +135,50 @@ describe('filterByYear', () => {
 
   it('is empty for a year with no diary entries', () => {
     expect(filterByYear(data, 1999)).toEqual(exportOf({}))
+  })
+})
+
+// --- Latest lists ------------------------------------------------------------
+
+describe('latestRatings', () => {
+  it('lists the newest ratings first', () => {
+    const data = exportOf({
+      ratings: [
+        { ...rated('a', 4), date: '2025-01-01' },
+        { ...rated('b', 3), date: '2026-05-24' },
+        { ...rated('c', 5), date: '2025-08-10' },
+      ],
+    })
+    expect(latestRatings(data, 2).map((f) => f.letterboxdUri)).toEqual(['b', 'c'])
+  })
+})
+
+describe('latestDiaryEntries', () => {
+  it('dates films by the day they were watched, not rated', () => {
+    // Watched in 2025, re-rated in 2026: the 2025 view must say 2025.
+    const data = exportOf({
+      ratings: [{ ...rated('a', 4), date: '2026-05-24' }],
+      watched: [film('a'), film('b')],
+      diary: [
+        { letterboxdUri: 'a', watchedDate: '2025-03-01' },
+        { letterboxdUri: 'b', watchedDate: '2025-06-01' },
+      ],
+    })
+    expect(latestDiaryEntries(data, 5)).toEqual([
+      { letterboxdUri: 'b', name: 'Film b', year: 2000, rating: null, date: '2025-06-01' },
+      { letterboxdUri: 'a', name: 'Film a', year: 2000, rating: 4, date: '2025-03-01' },
+    ])
+  })
+
+  it('puts the last-logged entry first when two share a day', () => {
+    const data = exportOf({
+      watched: [film('a'), film('b')],
+      diary: [
+        { letterboxdUri: 'a', watchedDate: '2025-03-01' },
+        { letterboxdUri: 'b', watchedDate: '2025-03-01' },
+      ],
+    })
+    expect(latestDiaryEntries(data, 5).map((f) => f.letterboxdUri)).toEqual(['b', 'a'])
   })
 })
 

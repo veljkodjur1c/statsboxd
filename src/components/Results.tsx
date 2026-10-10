@@ -49,7 +49,7 @@ function Results({ data, tmdb, onRetry, onReset }: ResultsProps) {
           <YearSelect years={years} value={year} onChange={setYear} />
         )}
       </div>
-      <ExportSummary data={view} tmdb={tmdb} onRetry={onRetry} />
+      <ExportSummary data={view} year={year} tmdb={tmdb} onRetry={onRetry} />
       <StatsSection data={view} tmdb={tmdb} />
       <WrapCard onReset={onReset} />
     </div>

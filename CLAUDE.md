@@ -139,6 +139,9 @@ The user is learning React and TypeScript. Therefore:
   holds the films logged in the diary that year (a rewatch counts in each
   year), with their current ratings; never-logged films are all-time only.
   The picker is hidden when the diary is empty. TMDB notices stay all-time.
+  In a year, "Latest ratings" becomes "Last watched" (`latestDiaryEntries`,
+  by watch date): a rating's `Date` changes whenever the rating is edited,
+  so it can point to a later year.
 - Films = `watched` ∪ `ratings`, one entry per Letterboxd URI.
 - Per group: Films = watched films, Rated = rated films, Avg = average of the
   ratings (unrated films don't affect it).
