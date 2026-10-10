@@ -1,4 +1,7 @@
 import { useState, type ChangeEvent, type DragEvent } from 'react'
+import Mascot from './brand/Mascot.tsx'
+import Icon from './Icon.tsx'
+import './UploadCard.css'
 
 type UploadCardProps = {
   onFileSelected: (file: File) => void
@@ -54,34 +57,62 @@ function UploadCard({ onFileSelected, isLoading, error }: UploadCardProps) {
   }
 
   const message = fileError ?? error
+  // The mascot shows what's going on: working, a problem, or waiting.
+  const mood = isLoading ? 'busy' : message ? 'sad' : 'idle'
 
+  // The whole section accepts a dropped file. While one is dragged over it,
+  // `is-dragging` brightens the projector's beam and lights up the screen.
   return (
     <section
-      className={isDragging ? 'card is-dragging' : 'card'}
+      className={isDragging ? 'hero is-dragging' : 'hero'}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <h2>Upload your Letterboxd export</h2>
-      <p>
-        Export your data from your Letterboxd settings, then choose or drop the
-        ZIP file here. Everything is processed in your browser.
-      </p>
-      <label className={isLoading ? 'button is-disabled' : 'button'}>
-        {isLoading ? 'Reading your export…' : 'Choose ZIP file'}
-        <input
-          type="file"
-          accept=".zip,application/zip"
-          className="visually-hidden"
-          disabled={isLoading}
-          onChange={handleChange}
-        />
-      </label>
-      {message && (
-        <p className="error-message" role="alert">
-          {message}
+      <div className="hero-copy">
+        <p className="kicker">Letterboxd stats</p>
+        <h2 className="hero-title">Your Letterboxd history, in numbers.</h2>
+        <p className="hero-sub">
+          See how you rate each genre and decade, and find your top actors and
+          directors.
         </p>
-      )}
+      </div>
+
+      <div className="stage">
+        <div className="stage-mascot">
+          <Mascot mood={mood} />
+        </div>
+        <div className="beam" aria-hidden="true" />
+        <div className="screen">
+          {message && <p className="kicker kicker--error">Film jammed</p>}
+          <h3 className="screen-title">Upload your Letterboxd export</h3>
+          <p>
+            Export your data from your Letterboxd settings, then choose or drop
+            the ZIP file here.
+          </p>
+          <label className={isLoading ? 'button is-disabled' : 'button'}>
+            <Icon name="upload" />
+            {isLoading ? 'Reading your export…' : 'Choose ZIP file'}
+            <input
+              type="file"
+              accept=".zip,application/zip"
+              className="visually-hidden"
+              disabled={isLoading}
+              onChange={handleChange}
+            />
+          </label>
+          {message && (
+            <p className="error-message" role="alert">
+              <Icon name="alert" />
+              <span>{message}</span>
+            </p>
+          )}
+          <p className="privacy">
+            <Icon name="lock" />
+            Everything is processed in your browser.
+          </p>
+        </div>
+      </div>
     </section>
   )
 }

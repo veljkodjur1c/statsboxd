@@ -1,0 +1,36 @@
+.key-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The key is a long token, so it's set in mono. The border reaches 3:1:
+   an input is found by its edge. */
+.key-form input {
+  flex: 1 1 240px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  font: 400 13px/1 var(--font-mono);
+  color: var(--color-text);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+}
+
+.key-form input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.key-form input:focus-visible {
+  outline-offset: 2px;
+}
+
+.key-status {
+  color: var(--color-text-muted);
+}
+
+.key-form + .error-message {
+  margin-top: var(--space-3);
+}

@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { clearUserToken, getUserToken, saveUserToken } from '../lib/tmdb.ts'
+import Icon from './Icon.tsx'
+import './TmdbKeyForm.css'
 
 type TmdbKeyFormProps = {
   // Called after the user's key was saved or removed.
@@ -64,7 +66,8 @@ function TmdbKeyForm({ onChange }: TmdbKeyFormProps) {
       </form>
       {error && (
         <p className="error-message" role="alert">
-          {error}
+          <Icon name="alert" />
+          <span>{error}</span>
         </p>
       )}
     </>
