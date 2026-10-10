@@ -93,6 +93,7 @@ const ICONS = {
       <path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10" />
     </>
   ),
+  play: <path d="M8 5.5v13l10.5-6.5Z" />,
   calendar: (
     <>
       <rect x="3.5" y="5" width="17" height="15" rx="2.5" />

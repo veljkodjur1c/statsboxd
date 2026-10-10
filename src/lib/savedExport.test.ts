@@ -1,0 +1,67 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { LetterboxdExport } from './letterboxd.ts'
+import { forgetExport, loadSavedExport, saveExport } from './savedExport.ts'
+
+const DATA: LetterboxdExport = {
+  ratings: [
+    { date: '2025-01-01', name: 'Heat', year: 1995, letterboxdUri: 'a', rating: 4.5 },
+  ],
+  watched: [{ date: '2025-01-01', name: 'Heat', year: 1995, letterboxdUri: 'a' }],
+  diary: [{ letterboxdUri: 'a', watchedDate: '2025-01-01' }],
+}
+
+/** A stand-in for the browser's localStorage, backed by a Map. */
+function memoryStorage() {
+  const items = new Map<string, string>()
+  return {
+    getItem: (key: string) => items.get(key) ?? null,
+    setItem: (key: string, value: string) => void items.set(key, value),
+    removeItem: (key: string) => void items.delete(key),
+  }
+}
+
+describe('saved export', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', memoryStorage())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('is null before anything was saved', () => {
+    expect(loadSavedExport()).toBeNull()
+  })
+
+  it('comes back as it was saved, with the day it was saved', () => {
+    const saved = saveExport(DATA)
+    expect(saved?.savedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(loadSavedExport()).toEqual(saved)
+  })
+
+  it('is gone after forgetting it', () => {
+    saveExport(DATA)
+    forgetExport()
+    expect(loadSavedExport()).toBeNull()
+  })
+
+  it('ignores something that is not a saved export', () => {
+    localStorage.setItem('statsboxd:export:v1', '{"data":{"ratings":[]}}')
+    expect(loadSavedExport()).toBeNull()
+    localStorage.setItem('statsboxd:export:v1', 'not json')
+    expect(loadSavedExport()).toBeNull()
+  })
+
+  it('reports a full or blocked storage instead of throwing', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('blocked')
+      },
+      setItem: () => {
+        throw new Error('quota exceeded')
+      },
+    })
+    expect(saveExport(DATA)).toBeNull()
+    expect(loadSavedExport()).toBeNull()
+  })
+})

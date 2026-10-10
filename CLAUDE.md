@@ -89,6 +89,11 @@ The user is learning React and TypeScript. Therefore:
   it never matches `watched.csv`. Diary entries are linked to films by name +
   year instead (`parseDiary`); `Watched Date` is the day the film was seen.
 - Parsing lives in `src/lib/letterboxd.ts`.
+- The parsed export is remembered (`src/lib/savedExport.ts`, localStorage
+  `statsboxd:export:v1`, ~60 KB for 268 films): the upload screen then offers
+  "Continue with last export" and "Forget it". The JSON is shape-checked on
+  load; bump the version when `LetterboxdExport` changes. If saving fails,
+  the older one is removed so a stale export is never offered.
 - The export has no TMDB IDs — films are matched via TMDB search by title + year.
 
 ## TMDB (notes)
@@ -216,7 +221,7 @@ The user is learning React and TypeScript. Therefore:
    tag `v2.0`), one commit per step:
    1. Vitest + tests for `letterboxd.ts` and `stats.ts` ✓
    2. Filter by year watched (`diary.csv` → `Watched Date`) ✓
-   3. Remember the last export between visits
+   3. Remember the last export between visits ✓
    4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time
    5. Privacy line on the upload screen, mobile check
    6. Shareable summary image

@@ -1,4 +1,6 @@
 import { useState, type ChangeEvent, type DragEvent } from 'react'
+import { formatDate } from '../lib/format.ts'
+import type { SavedExport } from '../lib/savedExport.ts'
 import Mascot from './brand/Mascot.tsx'
 import Icon from './Icon.tsx'
 import './UploadCard.css'
@@ -7,9 +9,19 @@ type UploadCardProps = {
   onFileSelected: (file: File) => void
   isLoading: boolean
   error: string | null
+  saved: SavedExport | null // the export from the last visit, if any
+  onContinue: () => void // show the stats for `saved` again
+  onForget: () => void
 }
 
-function UploadCard({ onFileSelected, isLoading, error }: UploadCardProps) {
+function UploadCard({
+  onFileSelected,
+  isLoading,
+  error,
+  saved,
+  onContinue,
+  onForget,
+}: UploadCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
 
@@ -57,6 +69,11 @@ function UploadCard({ onFileSelected, isLoading, error }: UploadCardProps) {
   }
 
   const message = fileError ?? error
+  const showSaved = saved !== null && !isLoading
+  const savedFilms =
+    saved === null
+      ? 0
+      : new Set([...saved.data.watched, ...saved.data.ratings].map((f) => f.letterboxdUri)).size
   // The mascot shows what's going on: working, a problem, or waiting.
   const mood = isLoading ? 'busy' : message ? 'sad' : 'idle'
 
@@ -90,21 +107,42 @@ function UploadCard({ onFileSelected, isLoading, error }: UploadCardProps) {
             Export your data from your Letterboxd settings, then choose or drop
             the ZIP file here.
           </p>
-          <label className={isLoading ? 'button is-disabled' : 'button'}>
-            <Icon name="upload" />
-            {isLoading ? 'Reading your export…' : 'Choose ZIP file'}
-            <input
-              type="file"
-              accept=".zip,application/zip"
-              className="visually-hidden"
-              disabled={isLoading}
-              onChange={handleChange}
-            />
-          </label>
+          <div className="upload-actions">
+            <label className={isLoading ? 'button is-disabled' : 'button'}>
+              <Icon name="upload" />
+              {isLoading ? 'Reading your export…' : 'Choose ZIP file'}
+              <input
+                type="file"
+                accept=".zip,application/zip"
+                className="visually-hidden"
+                disabled={isLoading}
+                onChange={handleChange}
+              />
+            </label>
+            {showSaved && (
+              <button
+                type="button"
+                className="button button--secondary"
+                onClick={onContinue}
+              >
+                <Icon name="play" />
+                Continue with last export
+              </button>
+            )}
+          </div>
           {message && (
             <p className="error-message" role="alert">
               <Icon name="alert" />
               <span>{message}</span>
+            </p>
+          )}
+          {showSaved && (
+            <p className="saved-note">
+              Last export: {savedFilms} films, uploaded{' '}
+              {formatDate(saved.savedAt)}. It’s kept in this browser only.{' '}
+              <button type="button" className="text-button" onClick={onForget}>
+                Forget it
+              </button>
             </p>
           )}
           <p className="privacy">

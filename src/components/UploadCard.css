@@ -99,6 +99,36 @@
   opacity: 1;
 }
 
+/* "Choose ZIP file" and, for a returning visitor, "Continue with last
+   export". They wrap onto two lines when there isn't room for both. */
+.upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+
+.saved-note {
+  max-width: 48ch;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* A button that reads like a link: for a small action inside a sentence. */
+.text-button {
+  padding: 0;
+  font: inherit;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: var(--color-accent-hover);
+}
+
 .kicker--error {
   color: var(--color-error);
 }

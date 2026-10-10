@@ -11,6 +11,12 @@ import {
   parseLetterboxdExport,
   type LetterboxdExport,
 } from './lib/letterboxd.ts'
+import {
+  forgetExport,
+  loadSavedExport,
+  saveExport,
+  type SavedExport,
+} from './lib/savedExport.ts'
 import { getTmdbToken, TmdbAuthError } from './lib/tmdb.ts'
 
 // The results view (with the charts) is a separate file the browser only
@@ -35,12 +41,16 @@ function errorMessage(error: unknown, fallback: string): string {
 function App() {
   const [state, setState] = useState<AppState>({ kind: 'idle' })
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // The export from the last visit, if any. Passing the function itself (not
+  // calling it) makes React read localStorage only on the first render.
+  const [saved, setSaved] = useState<SavedExport | null>(loadSavedExport)
 
   async function handleFile(file: File) {
     setState({ kind: 'parsing' })
     void loadResults()
     try {
       const data = await parseLetterboxdExport(file)
+      setSaved(saveExport(data))
       await startEnrich(data)
     } catch (error) {
       setState({
@@ -81,6 +91,18 @@ function App() {
         })
       }
     }
+  }
+
+  function handleContinue() {
+    if (saved !== null) {
+      void loadResults()
+      void startEnrich(saved.data)
+    }
+  }
+
+  function handleForget() {
+    forgetExport()
+    setSaved(null)
   }
 
   // Called when the user saves or removes their own TMDB key.
@@ -140,6 +162,9 @@ function App() {
             onFileSelected={handleFile}
             isLoading={state.kind === 'parsing'}
             error={state.kind === 'error' ? state.message : null}
+            saved={saved}
+            onContinue={handleContinue}
+            onForget={handleForget}
           />
         )}
       </main>
