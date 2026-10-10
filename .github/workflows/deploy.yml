@@ -31,6 +31,7 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
+      - run: npm test
 
       # The TMDB token comes from the repository secret VITE_TMDB_TOKEN.
       # Without it the build still works; the site then asks visitors for

@@ -19,6 +19,7 @@ is a static site deployed to GitHub Pages.
 - Recharts — charts
 - Styling: plain CSS with CSS custom properties (no CSS framework)
 - Linting: oxlint (comes with the Vite template)
+- Tests: Vitest — `*.test.ts` files next to the code they test (`src/lib/`)
 
 ## Working rules
 
@@ -180,7 +181,7 @@ The user is learning React and TypeScript. Therefore:
 - Live at https://veljkodjur1c.github.io/statsboxd/ (GitHub Pages, source:
   GitHub Actions). The repository must stay public for free Pages.
 - `.github/workflows/deploy.yml` runs on every push to `main` (or by hand from
-  the Actions tab): `npm ci` → `npm run lint` → `npm run build` with the
+  the Actions tab): `npm ci` → `npm run lint` → `npm test` → `npm run build` with the
   `VITE_TMDB_TOKEN` repository secret → upload `dist/` → deploy.
 - `vite.config.ts` sets `base: '/statsboxd/'` for the build and for
   `npm run preview`; the dev server stays at `/`. Reference assets by importing
@@ -199,11 +200,20 @@ The user is learning React and TypeScript. Therefore:
 6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions) ✓
 7. v2 redesign: design system, brand and mascot, every screen restyled
    (branch `redesign`; v1 kept as tag `v1.0`) ✓
+8. Feature expansion (branch `features`; the v2 design with v1 features is
+   tag `v2.0`), one commit per step:
+   1. Vitest + tests for `letterboxd.ts` and `stats.ts` ✓
+   2. Filter by year watched (`diary.csv` → `Watched Date`)
+   3. Remember the last export between visits
+   4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time
+   5. Privacy line on the upload screen, mobile check
+   6. Shareable summary image
 
 ## Commands
 
 - `npm run dev` — dev server at http://localhost:5173
 - `npm run build` — type-check (`tsc -b`) + production build into `dist/`
 - `npm run lint` — oxlint
+- `npm test` — run the tests once (Vitest)
 - `npm run preview` — serve the production build locally at
   http://localhost:4173/statsboxd/
