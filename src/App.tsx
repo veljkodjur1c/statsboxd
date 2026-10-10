@@ -1,8 +1,10 @@
 import { lazy, Suspense, useState } from 'react'
 import tmdbLogo from './assets/tmdb-logo.svg'
+import Logo from './components/brand/Logo.tsx'
 import EnrichProgress from './components/EnrichProgress.tsx'
+import Icon from './components/Icon.tsx'
+import KeySettingsDialog from './components/KeySettingsDialog.tsx'
 import TmdbKeyCard from './components/TmdbKeyCard.tsx'
-import TmdbKeyForm from './components/TmdbKeyForm.tsx'
 import UploadCard from './components/UploadCard.tsx'
 import { enrichFilms, type EnrichResult } from './lib/enrich.ts'
 import {
@@ -32,6 +34,7 @@ function errorMessage(error: unknown, fallback: string): string {
 
 function App() {
   const [state, setState] = useState<AppState>({ kind: 'idle' })
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   async function handleFile(file: File) {
     setState({ kind: 'parsing' })
@@ -89,11 +92,32 @@ function App() {
 
   return (
     <div className="app">
-      <header className="site-header">
-        <h1 className="site-title">
-          Stats<span className="accent">boxd</span>
-        </h1>
-        <p className="tagline">Your Letterboxd history, in numbers.</p>
+      <header className="topbar">
+        <Logo />
+        <div className="topbar-actions">
+          {/* The TMDB key card already shows the form, so no button then. */}
+          {state.kind !== 'needs-key' && (
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="TMDB key settings"
+              title="TMDB key settings"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Icon name="key" />
+            </button>
+          )}
+          {state.kind === 'done' && (
+            <button
+              type="button"
+              className="button button--secondary topbar-reset"
+              onClick={() => setState({ kind: 'idle' })}
+            >
+              <Icon name="rewind" />
+              <span className="button-label">Upload another export</span>
+            </button>
+          )}
+        </div>
       </header>
 
       <main>
@@ -122,25 +146,28 @@ function App() {
 
       <footer className="site-footer">
         <p>Not affiliated with Letterboxd.</p>
-        <a
-          className="tmdb-logo"
-          href="https://www.themoviedb.org"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <img src={tmdbLogo} alt="The Movie Database (TMDB)" width="92" height="12" />
-        </a>
-        <p>
-          This product uses the TMDB API but is not endorsed or certified by
-          TMDB.
-        </p>
-        {state.kind !== 'needs-key' && (
-          <details className="key-settings">
-            <summary>TMDB key settings</summary>
-            <TmdbKeyForm onChange={handleKeyChange} />
-          </details>
-        )}
+        <div className="site-footer-tmdb">
+          <a
+            className="tmdb-logo"
+            href="https://www.themoviedb.org"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img src={tmdbLogo} alt="The Movie Database (TMDB)" width="92" height="12" />
+          </a>
+          <p>
+            This product uses the TMDB API but is not endorsed or certified by
+            TMDB.
+          </p>
+        </div>
       </footer>
+
+      {settingsOpen && (
+        <KeySettingsDialog
+          onKeyChange={handleKeyChange}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
     </div>
   )
 }

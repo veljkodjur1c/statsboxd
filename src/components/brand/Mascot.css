@@ -1,0 +1,128 @@
+/* The mascot's colours come from the design tokens, so the SVG itself only
+   names the parts. The outline is the page colour: invisible on the dark
+   page, a crisp edge on the white wrap card. */
+
+.mascot {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.mascot-body {
+  fill: var(--color-mascot);
+  stroke: var(--color-bg);
+}
+
+.mascot-metal {
+  fill: var(--color-mascot-metal);
+  stroke: var(--color-bg);
+}
+
+.mascot-arm,
+.mascot-film {
+  fill: none;
+  stroke: var(--color-mascot-metal);
+}
+
+.mascot-film-holes {
+  fill: none;
+  stroke: var(--color-text-faint);
+}
+
+.mascot-ink {
+  fill: var(--color-bg);
+}
+
+.mascot-mouth {
+  stroke: var(--color-bg);
+}
+
+.mascot-line {
+  fill: none;
+  stroke: var(--color-bg);
+}
+
+.mascot-glint {
+  fill: var(--color-inverse);
+}
+
+/* Aqua is the projector's light: only the lens glass and its glow. */
+.mascot-glass {
+  fill: var(--color-accent);
+  stroke: var(--color-bg);
+}
+
+.mascot-glass.is-dim {
+  fill: var(--color-mascot-metal);
+}
+
+.mascot-glow {
+  fill: var(--color-accent);
+  opacity: 0.55;
+  transition: opacity var(--duration) var(--ease-out);
+}
+
+/* Rotate and squash around each part's own centre. */
+.mascot .reel,
+.mascot .eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Animations only for people who haven't asked for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .mascot--idle .eyes {
+    animation: mascot-blink 6s infinite;
+  }
+
+  .mascot--busy .reel {
+    animation: mascot-reel-spin 1.6s linear infinite;
+  }
+
+  /* The rear reel turns at its own pace, like the real thing. */
+  .mascot--busy .reel--rear {
+    animation-duration: 2.2s;
+  }
+
+  .mascot--busy .mascot-glow {
+    animation: mascot-lens-pulse 0.9s ease-in-out infinite alternate;
+  }
+
+  /* One small hop when the wrap card appears. */
+  .mascot--happy {
+    animation: mascot-hop 0.7s var(--ease-out) 0.2s both;
+  }
+}
+
+@keyframes mascot-reel-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes mascot-blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes mascot-lens-pulse {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.9;
+  }
+}
+
+@keyframes mascot-hop {
+  40% {
+    transform: translateY(-10px);
+  }
+}

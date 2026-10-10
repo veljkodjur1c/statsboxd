@@ -144,10 +144,6 @@ a:hover {
   }
 }
 
-.accent {
-  color: var(--color-accent);
-}
-
 /* Hidden visually, but still reachable by keyboard and screen readers. */
 .visually-hidden {
   position: absolute;
@@ -161,57 +157,96 @@ a:hover {
   border: 0;
 }
 
+/* Icons are drawn in the text colour; the place that uses one sets its size. */
+.icon {
+  display: block;
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+/* The small mono label above a heading, like the edge print on film stock:
+   "NOW SHOWING", "REEL 01 · GENRES". */
+.kicker {
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
 /* Layout */
 
 .app {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
   max-width: var(--max-width);
   min-height: 100vh;
   margin: 0 auto;
-  padding: var(--space-6) var(--space-3) var(--space-4);
+  padding: 0 var(--space-4);
 }
 
-.site-header {
-  text-align: center;
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* The logo: the lens-and-beam mark and the lowercase wordmark. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  color: var(--color-accent);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 main {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-}
-
-.site-title {
-  font-size: clamp(2.5rem, 9vw, 4rem);
-  letter-spacing: 0.01em;
-}
-
-.tagline {
-  margin-top: var(--space-2);
-  color: var(--color-text-muted);
-  font-size: 1.125rem;
+  padding: var(--space-5) 0;
 }
 
 .site-footer {
-  margin-top: auto;
-  text-align: center;
-  font-size: 0.875rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) 0;
+  font-size: 0.8125rem;
   color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
 }
 
-.site-footer p + p {
-  margin-top: var(--space-1);
+.site-footer-tmdb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
 }
 
 /* TMDB requires its logo next to the attribution; kept small and quieter
    than our own branding. */
-.tmdb-logo {
-  display: inline-block;
-  margin: var(--space-3) 0 var(--space-1);
-}
-
 .tmdb-logo img {
   display: block;
   width: 92px;
@@ -219,21 +254,29 @@ main {
 }
 
 .loading-note {
-  text-align: center;
   color: var(--color-text-muted);
 }
 
-.key-settings {
-  max-width: 520px;
-  margin: var(--space-3) auto 0;
-}
+@media (max-width: 600px) {
+  .app {
+    padding: 0 var(--space-3);
+  }
 
-.key-settings summary {
-  cursor: pointer;
-}
+  /* On a phone the top bar keeps only the icon of "Upload another export";
+     the label stays for screen readers (it becomes visually hidden). */
+  .topbar-reset {
+    width: 40px;
+    padding: 0;
+  }
 
-.key-settings .key-form {
-  margin-top: var(--space-3);
+  .topbar-reset .button-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 /* Components */
@@ -303,54 +346,120 @@ main {
   color: var(--color-text-muted);
 }
 
+/*
+ * Film lists (latest ratings, the film list dialog): the name on the left,
+ * the rating in a fixed column on the right. The stars are left-aligned in
+ * that column, so every row's first star starts at the same x and ratings can
+ * be compared and counted down the list. The column is five stars wide.
+ */
 .film-list {
-  max-width: 520px;
-  margin: 0 auto var(--space-5);
+  --rating-column: 78px;
+  margin: 0;
   padding: 0;
   list-style: none;
-  text-align: left;
 }
 
 .film-list li {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rating-column);
+  align-items: center;
   gap: var(--space-3);
+  min-height: 52px;
   padding: var(--space-2) 0;
   border-bottom: 1px solid var(--color-border);
 }
 
-.film-year {
+.film-list li:last-child {
+  border-bottom: 0;
+}
+
+.film-list li > .stars,
+.film-list li > .film-unrated {
+  justify-self: start;
+}
+
+.film-name {
+  min-width: 0;
+}
+
+.film-name a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.film-name a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Year (and date) under the title, in mono. */
+.film-meta {
+  display: block;
+  margin-top: 2px;
+  font: 400 12px/16px var(--font-mono);
+  letter-spacing: 0.04em;
   color: var(--color-text-muted);
 }
 
-.film-rating {
-  flex-shrink: 0;
-  color: var(--color-accent);
+.film-unrated {
+  font: 400 11px/16px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
+/* Ratings are the only amber thing on the page. */
+.stars {
+  display: inline-flex;
+  gap: 1px;
+  color: var(--color-star);
+}
+
+.stars svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+/* Buttons. Primary (aqua) once per view, for the thing a screen is for;
+   secondary for everything else. */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 28px;
-  font: inherit;
-  font-weight: 600;
+  gap: var(--space-2);
+  height: 44px;
+  padding: 0 20px;
+  font: 600 15px/1 var(--font-body);
   color: var(--color-on-accent);
+  white-space: nowrap;
   background: var(--color-accent);
-  border: none;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.button .icon {
+  width: 18px;
+  height: 18px;
 }
 
 .button:hover:not(:disabled, .is-disabled) {
   background: var(--color-accent-hover);
 }
 
+.button:active:not(:disabled, .is-disabled) {
+  transform: translateY(1px);
+}
+
 /* :has() covers the <label> button whose focusable part is a hidden input. */
 .button:focus-visible,
 .button:has(:focus-visible) {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--focus-ring, var(--color-accent));
   outline-offset: 3px;
 }
 
@@ -361,13 +470,44 @@ main {
 }
 
 .button--secondary {
-  color: var(--color-accent);
-  background: transparent;
-  border: 1px solid var(--color-accent);
+  color: var(--color-text);
+  background: var(--color-surface-2);
+  border-color: var(--color-border-strong);
 }
 
 .button--secondary:hover:not(:disabled, .is-disabled) {
-  color: var(--color-on-accent);
+  background: var(--color-surface-3);
+}
+
+.button--small {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 0.875rem;
+}
+
+.button--small .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* A round button with just an icon; it needs an aria-label. */
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.icon-button:hover {
+  background: var(--color-surface-2);
 }
 
 progress {
@@ -745,117 +885,7 @@ th[aria-sort] .sort-button {
   outline-offset: 2px;
 }
 
-/* Film list dialog */
-
-/* Stop the page behind the dialog from scrolling while it's open. */
-body:has(.film-dialog[open]) {
-  overflow: hidden;
-}
-
-.film-dialog {
-  width: min(560px, calc(100% - 2 * var(--space-3)));
-  max-height: min(80vh, 720px);
-  padding: 0;
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: 0 24px 64px rgb(0 0 0 / 0.6);
-}
-
-.film-dialog::backdrop {
-  background: rgb(0 0 0 / 0.7);
-}
-
-.film-dialog-header {
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-4) var(--space-3);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.film-dialog h2 {
-  font-size: 1.5rem;
-  overflow-wrap: anywhere;
-}
-
-.film-dialog-kind {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-}
-
-.film-dialog-meta {
-  margin-top: var(--space-1);
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-}
-
-.dialog-close {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  font-size: 1.5rem;
-  line-height: 1;
-  color: var(--color-text);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.dialog-close:hover {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.dialog-close:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.film-dialog-list {
-  max-width: none;
-  margin: 0;
-  padding: var(--space-2) var(--space-4) var(--space-4);
-}
-
-.film-dialog-list a {
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.film-dialog-list a:hover {
-  color: var(--color-accent);
-  text-decoration: underline;
-}
-
-.film-unrated {
-  flex-shrink: 0;
-  font-size: 0.8125rem;
-  font-style: italic;
-  color: var(--color-text-muted);
-}
-
-.button--small {
-  margin-top: var(--space-3);
-  padding: 6px 18px;
-  font-size: 0.875rem;
-}
-
 @media (max-width: 600px) {
-  .app {
-    padding-top: var(--space-5);
-  }
-
   .card {
     padding: var(--space-4) var(--space-3);
   }
