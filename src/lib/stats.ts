@@ -30,6 +30,27 @@ export type Stats = {
   totalFilms: number
 }
 
+/**
+ * Every film once. Rated films are normally in watched.csv too, so this is
+ * watched ∪ ratings with one entry per Letterboxd URI.
+ */
+function uniqueFilms(data: LetterboxdExport): Film[] {
+  const films = new Map<string, Film>()
+  for (const film of [...data.watched, ...data.ratings]) {
+    if (!films.has(film.letterboxdUri)) {
+      films.set(film.letterboxdUri, film)
+    }
+  }
+  return [...films.values()]
+}
+
+const ratingsByUri = (data: LetterboxdExport) =>
+  new Map(data.ratings.map((film) => [film.letterboxdUri, film.rating]))
+
+/** The average of some numbers; null if there are none. */
+const mean = (values: number[]) =>
+  values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : null
+
 /** One bar of the rating histogram, e.g. { rating: 3.5, count: 41 }. */
 export type RatingBin = {
   rating: number
@@ -107,13 +128,8 @@ export function latestDiaryEntries(
   data: LetterboxdExport,
   count: number,
 ): DatedFilm[] {
-  const films = new Map<string, Film>()
-  for (const film of [...data.watched, ...data.ratings]) {
-    films.set(film.letterboxdUri, film)
-  }
-  const ratingByUri = new Map(
-    data.ratings.map((film) => [film.letterboxdUri, film.rating]),
-  )
+  const films = new Map(uniqueFilms(data).map((film) => [film.letterboxdUri, film]))
+  const ratingByUri = ratingsByUri(data)
 
   const entries: DatedFilm[] = []
   for (const entry of data.diary) {
@@ -267,18 +283,8 @@ export function computeStats(
   data: LetterboxdExport,
   tmdb: EnrichResult,
 ): Stats {
-  // Rated films are normally in watched.csv too: keep one entry per film.
-  const films = new Map<string, Film>()
-  for (const film of [...data.watched, ...data.ratings]) {
-    if (!films.has(film.letterboxdUri)) {
-      films.set(film.letterboxdUri, film)
-    }
-  }
-  const ratingByUri = new Map(
-    data.ratings.map((film) => [film.letterboxdUri, film.rating]),
-  )
-
-  const entries: FilmEntry[] = [...films.values()].map((film) => ({
+  const ratingByUri = ratingsByUri(data)
+  const entries: FilmEntry[] = uniqueFilms(data).map((film) => ({
     film,
     rating: ratingByUri.get(film.letterboxdUri) ?? null,
     tmdb: tmdb.byUri[film.letterboxdUri] ?? null,
@@ -308,12 +314,76 @@ export function computeStats(
       'desc',
     ),
     decades: sortGroups(decades, 'name', 'asc'),
-    averageRating:
-      data.ratings.length > 0
-        ? data.ratings.reduce((sum, film) => sum + film.rating, 0) /
-          data.ratings.length
-        : null,
+    averageRating: mean(data.ratings.map((film) => film.rating)),
     matchedFilms: entries.filter((entry) => entry.tmdb !== null).length,
     totalFilms: entries.length,
+  }
+}
+
+/**
+ * Minutes of film you watched, by TMDB runtime. Each film counts once (so
+ * rewatches don't add up), and films without a runtime count as 0, so this
+ * is a lower bound.
+ */
+export function watchTime(data: LetterboxdExport, tmdb: EnrichResult): number {
+  let minutes = 0
+  for (const film of uniqueFilms(data)) {
+    minutes += tmdb.byUri[film.letterboxdUri]?.runtime ?? 0
+  }
+  return minutes
+}
+
+// A film needs this many TMDB votes before its average counts as "the
+// crowd": with a handful of votes the average is mostly noise.
+export const MIN_CROWD_VOTES = 50
+
+/** A film you rated, next to what TMDB users gave it. */
+export type CrowdFilm = GroupFilm & {
+  rating: number // always rated here
+  crowd: number // TMDB users' average, halved to the 0–5 star scale
+  difference: number // rating − crowd: positive means you liked it more
+}
+
+export type CrowdComparison = {
+  films: CrowdFilm[] // you-liked-it-more first, you-liked-it-less last
+  yourAverage: number | null // over these films only; null if there are none
+  crowdAverage: number | null
+}
+
+/**
+ * Your ratings against TMDB's, for the rated films TMDB users voted on
+ * enough. TMDB rates out of 10, so its average is halved to compare it with
+ * stars.
+ */
+export function crowdComparison(
+  data: LetterboxdExport,
+  tmdb: EnrichResult,
+): CrowdComparison {
+  const films: CrowdFilm[] = []
+  for (const film of data.ratings) {
+    const match = tmdb.byUri[film.letterboxdUri]
+    if (
+      match === undefined ||
+      match.voteAverage === null ||
+      match.voteCount < MIN_CROWD_VOTES
+    ) {
+      continue
+    }
+    const crowd = match.voteAverage / 2
+    films.push({
+      letterboxdUri: film.letterboxdUri,
+      name: film.name,
+      year: film.year,
+      rating: film.rating,
+      crowd,
+      difference: film.rating - crowd,
+    })
+  }
+  films.sort((a, b) => b.difference - a.difference || a.name.localeCompare(b.name))
+
+  return {
+    films,
+    yourAverage: mean(films.map((film) => film.rating)),
+    crowdAverage: mean(films.map((film) => film.crowd)),
   }
 }

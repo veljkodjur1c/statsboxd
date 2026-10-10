@@ -1,8 +1,10 @@
 import type { Film } from './letterboxd.ts'
 import { fetchTmdbFilm, TmdbAuthError, type TmdbFilm } from './tmdb.ts'
 
-// Bump the version when the shape of TmdbFilm changes, so old entries are ignored.
-const CACHE_KEY = 'statsboxd:tmdb:v1'
+// Bump the version when the shape of TmdbFilm changes, so old entries are
+// ignored, and add the old key to OLD_CACHE_KEYS so it's deleted.
+const CACHE_KEY = 'statsboxd:tmdb:v2'
+const OLD_CACHE_KEYS = ['statsboxd:tmdb:v1']
 // Each film takes 2 TMDB calls, and the browser sends an extra preflight
 // request before each of them. 4 workers stays close to TMDB's rate limit.
 const CONCURRENCY = 4
@@ -21,6 +23,10 @@ export type EnrichResult = {
 
 function loadCache(): Cache {
   try {
+    // Outdated caches are never read again; free the room they take.
+    for (const key of OLD_CACHE_KEYS) {
+      localStorage.removeItem(key)
+    }
     const raw = localStorage.getItem(CACHE_KEY)
     return raw ? (JSON.parse(raw) as Cache) : {}
   } catch {

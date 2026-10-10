@@ -11,6 +11,9 @@ export type TmdbFilm = {
   genres: string[]
   cast: Person[] // top-billed actors first
   directors: Person[]
+  voteAverage: number | null // TMDB users' average, 0–10; null if nobody voted
+  voteCount: number
+  runtime: number | null // minutes; null if TMDB doesn't know
 }
 
 const API_BASE = 'https://api.themoviedb.org/3'
@@ -126,6 +129,9 @@ type MovieResponse = {
   id: number
   title: string
   genres: { id: number; name: string }[]
+  vote_average: number
+  vote_count: number
+  runtime: number | null
   credits: {
     cast: { id: number; name: string }[]
     crew: { id: number; name: string; job: string }[]
@@ -201,5 +207,9 @@ export async function fetchTmdbFilm(
       .slice(0, CAST_LIMIT)
       .map((actor) => ({ id: actor.id, name: actor.name })),
     directors: [...directors].map(([id, name]) => ({ id, name })),
+    // TMDB sends 0 (not null) when there are no votes or no runtime.
+    voteAverage: movie.vote_count > 0 ? movie.vote_average : null,
+    voteCount: movie.vote_count,
+    runtime: movie.runtime ? movie.runtime : null,
   }
 }

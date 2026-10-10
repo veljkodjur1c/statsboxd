@@ -3,12 +3,15 @@ import type { EnrichResult } from './enrich.ts'
 import type { Film, LetterboxdExport, RatedFilm } from './letterboxd.ts'
 import {
   computeStats,
+  crowdComparison,
   diaryYears,
   filterByYear,
   latestDiaryEntries,
   latestRatings,
+  MIN_CROWD_VOTES,
   ratingDistribution,
   sortGroups,
+  watchTime,
   type GroupStat,
 } from './stats.ts'
 import type { Person, TmdbFilm } from './tmdb.ts'
@@ -32,9 +35,23 @@ function tmdbFilm(
   genres: string[],
   cast: Person[] = [],
   directors: Person[] = [],
+  extra: Partial<TmdbFilm> = {},
 ): TmdbFilm {
-  return { tmdbId: 1, title: '', genres, cast, directors }
+  return {
+    tmdbId: 1,
+    title: '',
+    genres,
+    cast,
+    directors,
+    voteAverage: null,
+    voteCount: 0,
+    runtime: null,
+    ...extra,
+  }
 }
+
+/** A TMDB match that only matters for its votes or runtime. */
+const tmdbWith = (extra: Partial<TmdbFilm>) => tmdbFilm([], [], [], extra)
 
 const ana: Person = { id: 1, name: 'Ana' }
 const bob: Person = { id: 2, name: 'Bob' }
@@ -248,5 +265,58 @@ describe('computeStats', () => {
   it('has no average rating without ratings', () => {
     const data = exportOf({ watched: [film('a')] })
     expect(computeStats(data, enriched({})).averageRating).toBeNull()
+  })
+})
+
+// --- Watch time and the crowd ------------------------------------------------
+
+describe('watchTime', () => {
+  it('adds up runtimes, each film once, skipping unknown ones', () => {
+    const data = exportOf({
+      ratings: [rated('a', 4)],
+      watched: [film('a'), film('b'), film('c'), film('d')],
+    })
+    const tmdb = enriched({
+      a: tmdbWith({ runtime: 120 }),
+      b: tmdbWith({ runtime: 95 }),
+      c: tmdbWith({ runtime: null }),
+      // d: not found on TMDB
+    })
+    expect(watchTime(data, tmdb)).toBe(215)
+  })
+})
+
+describe('crowdComparison', () => {
+  const data = exportOf({
+    ratings: [rated('loved', 5), rated('hated', 1), rated('same', 3.5), rated('obscure', 5)],
+  })
+  const tmdb = enriched({
+    loved: tmdbWith({ voteAverage: 6, voteCount: 1000 }), // 3★ → +2
+    hated: tmdbWith({ voteAverage: 8, voteCount: 1000 }), // 4★ → −3
+    same: tmdbWith({ voteAverage: 7, voteCount: 1000 }), // 3.5★ → 0
+    obscure: tmdbWith({ voteAverage: 2, voteCount: MIN_CROWD_VOTES - 1 }), // too few votes
+  })
+
+  it('halves TMDB averages and sorts by how much more you liked a film', () => {
+    const { films } = crowdComparison(data, tmdb)
+    expect(films.map((f) => [f.letterboxdUri, f.crowd, f.difference])).toEqual([
+      ['loved', 3, 2],
+      ['same', 3.5, 0],
+      ['hated', 4, -3],
+    ])
+  })
+
+  it('averages both sides over the same films', () => {
+    const { yourAverage, crowdAverage } = crowdComparison(data, tmdb)
+    expect(yourAverage).toBeCloseTo((5 + 1 + 3.5) / 3)
+    expect(crowdAverage).toBeCloseTo((3 + 4 + 3.5) / 3)
+  })
+
+  it('has no averages when no film qualifies', () => {
+    expect(crowdComparison(data, enriched({}))).toEqual({
+      films: [],
+      yourAverage: null,
+      crowdAverage: null,
+    })
   })
 })
