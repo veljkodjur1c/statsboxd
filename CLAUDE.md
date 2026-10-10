@@ -103,15 +103,17 @@ The user is learning React and TypeScript. Therefore:
 - `GET /search/movie` (with `primary_release_year`, falling back to a search
   without a year that accepts ±1 year) to find a film, then
   `GET /movie/{id}?append_to_response=credits` for genres, cast (top 15) and
-  directors (crew member with `job === "Director"`).
+  directors (crew member with `job === "Director"`), plus `vote_average`,
+  `vote_count` and `runtime` (TMDB sends 0 for "unknown"; stored as null).
 - API key: the user's own key (localStorage `statsboxd:tmdbToken`) wins over
   the built-in one (`VITE_TMDB_TOKEN` in `.env.local`, never committed; see
   `.env.example`). Both TMDB credential types work: Read Access Token (Bearer
   header) and the old 32-char API key (`api_key` param).
 - With no backend, any built-in key is visible in the client bundle. For the
   deploy it comes from the GitHub Actions secret `VITE_TMDB_TOKEN`.
-- Cache: localStorage `statsboxd:tmdb:v1`, keyed by Letterboxd URI; `null`
-  means "no TMDB match". Bump the version when `TmdbFilm` changes. Failed
+- Cache: localStorage `statsboxd:tmdb:v2`, keyed by Letterboxd URI; `null`
+  means "no TMDB match". Bump the version when `TmdbFilm` changes and add the
+  old key to `OLD_CACHE_KEYS` (in `enrich.ts`), which deletes it. Failed
   requests are not cached, so "Retry" refetches only those.
 - 4 films in flight at once. Every request also triggers a CORS preflight, and
   TMDB's 429 on a preflight reaches `fetch` as a plain network error — so
@@ -127,9 +129,18 @@ The user is learning React and TypeScript. Therefore:
 - Code: `src/lib/stats.ts` (pure functions, no React); UI in
   `src/components/StatsSection.tsx` and `StatTable.tsx`.
 - Results page (`Results.tsx`): "Now showing · Your stats" title, the four
-  ticket tiles, notices (failed + Retry, "not found" as `<details>`), "How
+  ticket tiles (films watched, films rated, average rating, watch time),
+  notices (failed + Retry, "not found" as `<details>`), "How
   you rate" (2/3) beside "Latest ratings" (1/3) — all in `ExportSummary` —
-  then a hint line, the four stat cards and the wrap card.
+  then a hint line, the four stat cards, the crowd card and the wrap card.
+- Watch time (`watchTime`): TMDB runtimes, each film once, in hours; films
+  without a runtime count as 0. It replaced the "Matched on TMDB" tile — the
+  hint line and the notices already say when films weren't matched.
+- Reel 05 "You vs. the crowd" (`CrowdCard`, `crowdComparison`): your rating
+  against the TMDB average halved to stars, for rated films with at least
+  `MIN_CROWD_VOTES` (50) votes. A verdict sentence + your/crowd averages,
+  then the 5 films you liked most above and most below the crowd. Hidden
+  when no film qualifies.
 - Stat cards in a 2-column `.stats-grid` (one column below ~500px per card):
   Reel 01 Genres and Reel 02 Decades (charts) first, then Reel 03 Actors and
   Reel 04 Directors (tables). The Chart/Table switch is in the card header;
@@ -190,8 +201,8 @@ The user is learning React and TypeScript. Therefore:
   `prefers-reduced-motion`.
 - Everything that uses Recharts is behind `src/components/Results.tsx`, which
   `App` loads lazily (`React.lazy` + `Suspense`) and starts downloading as
-  soon as a file is chosen. Initial JS ~360 KB (113 KB gzipped), the results
-  chunk ~376 KB (109 KB gzipped).
+  soon as a file is chosen. Initial JS ~362 KB (114 KB gzipped), the results
+  chunk ~381 KB (110 KB gzipped).
 
 ## Deploy (notes)
 
@@ -222,7 +233,7 @@ The user is learning React and TypeScript. Therefore:
    1. Vitest + tests for `letterboxd.ts` and `stats.ts` ✓
    2. Filter by year watched (`diary.csv` → `Watched Date`) ✓
    3. Remember the last export between visits ✓
-   4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time
+   4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time ✓
    5. Privacy line on the upload screen, mobile check
    6. Shareable summary image
 

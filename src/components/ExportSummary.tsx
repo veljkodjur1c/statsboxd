@@ -6,6 +6,7 @@ import {
   latestDiaryEntries,
   latestRatings,
   ratingDistribution,
+  watchTime,
 } from '../lib/stats.ts'
 import RatingDistributionChart from './charts/RatingDistributionChart.tsx'
 import Icon, { type IconName } from './Icon.tsx'
@@ -38,11 +39,7 @@ function ExportSummary({ data, year, tmdb, onRetry }: ExportSummaryProps) {
       ? latestRatings(data, LATEST_COUNT)
       : latestDiaryEntries(data, LATEST_COUNT)
 
-  // Counted over the films shown (all of them, or one year's), not over
-  // everything that was looked up on TMDB.
-  const uris = new Set([...watched, ...ratings].map((film) => film.letterboxdUri))
-  const totalFilms = uris.size
-  const matched = [...uris].filter((uri) => uri in tmdb.byUri).length
+  const hours = Math.round(watchTime(data, tmdb) / 60)
 
   return (
     <>
@@ -63,9 +60,15 @@ function ExportSummary({ data, year, tmdb, onRetry }: ExportSummaryProps) {
             </>
           )}
         </Tile>
-        <Tile label="Matched on TMDB" icon="check">
-          {matched}
-          <small>/ {totalFilms}</small>
+        <Tile label="Watch time" icon="clock">
+          {hours === 0 ? (
+            '—'
+          ) : (
+            <>
+              {hours.toLocaleString('en-US')}
+              <small>hours</small>
+            </>
+          )}
         </Tile>
       </div>
 

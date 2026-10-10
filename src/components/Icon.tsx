@@ -94,6 +94,12 @@ const ICONS = {
     </>
   ),
   play: <path d="M8 5.5v13l10.5-6.5Z" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
   calendar: (
     <>
       <rect x="3.5" y="5" width="17" height="15" rx="2.5" />

@@ -1,0 +1,51 @@
+/* Reel 05, "You vs. the crowd": a verdict, then two short film lists. */
+
+.crowd-verdict {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-4);
+}
+
+.crowd-verdict-text {
+  font: 500 1.5rem/1.2 var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.crowd-averages {
+  font: 400 12px/16px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.crowd-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.crowd-column-title {
+  padding-bottom: var(--space-2);
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* A third column after the stars: how far you are from the crowd. */
+.crowd-list li {
+  grid-template-columns: minmax(0, 1fr) var(--rating-column) 3rem;
+}
+
+.crowd-difference {
+  font: 500 13px/1 var(--font-mono);
+  text-align: right;
+  color: var(--color-text);
+}
+
+@media (max-width: 720px) {
+  .crowd-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
