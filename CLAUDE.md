@@ -34,11 +34,43 @@ The user is learning React and TypeScript. Therefore:
 
 ## UI
 
-- English UI, dark "cinematic" theme.
-- Amber/gold accent; Playfair Display (Google Fonts) for headings, system font
-  stack for body text.
-- Design tokens (colors, spacing, fonts) live as CSS variables in `src/index.css`.
-  Reuse them instead of hard-coding values.
+- English UI. v2 design, concept "projection room" (v1, the gold theme, is
+  the git tag `v1.0`). The design system is the Artifact "Statsboxd Design
+  System" (https://claude.ai/artifact/BcG4RKYQQ97WvPdTGKf6Jm): tokens, usage
+  rules and a preview of every component. Where it and the code disagree,
+  the code wins (e.g. the wrap card is no longer white there).
+- Colors: neutral near-black surfaces; aqua `--color-accent` (#3ee3d2) is the
+  projector's light, for everything you can act on (primary buttons, focus,
+  links, hovered bar); amber `--color-star` (#f5b544) only ever means a
+  rating; white `--color-inverse` only for the selected Chart/Table segment.
+  Text on aqua is near-black, never white.
+- Fonts (Google Fonts): Bricolage Grotesque for headings and big numbers,
+  JetBrains Mono for small labels (`.kicker`, axis ticks, counters), system
+  font stack for body text.
+- Layout: top bar (logo, TMDB key button, "Upload another export") + a grid
+  of left-aligned cards (`.card`, `.card-header` with `.kicker` and
+  `.card-title`, optional control on the right).
+- Signature motifs, each in its place only: ticket-stub tiles for the four
+  headline numbers, mono "edge print" kickers ("Reel 01 · Genres"), the
+  film-strip progress bar, the projector beam on the upload screen.
+- Brand: `src/components/brand/Logo.tsx` (lens tube, beam, 3 bars) and
+  `Mascot.tsx` — a projector with `mood: 'idle' | 'busy' | 'sad' | 'happy'`,
+  decorative (`aria-hidden`), animated with CSS only. Icons are hand-drawn
+  SVGs in `src/components/Icon.tsx` (`IconName` union), no icon package.
+- The closing "That's a wrap." card (`WrapCard`) is deliberately quiet: no
+  fill, hairline border, secondary button. It must not compete with the stats.
+- Motion: every animation sits inside
+  `@media (prefers-reduced-motion: no-preference)`, and `index.css` has a
+  reduce-motion safety net. Results rise in one block after another; dialogs
+  and their backdrop fade in.
+- Design tokens (colors, spacing, radii, shadows, motion, fonts) live as CSS
+  variables in `src/index.css`. Reuse them instead of hard-coding values.
+- CSS organisation: `src/index.css` holds tokens, base styles, helpers
+  (`.kicker`, `.visually-hidden`), shared parts (card, buttons, icon button,
+  film list, stars) and the page shell. Every component's own styles are in
+  a CSS file next to it, imported by the component (`import './X.css'`).
+  It is still global CSS, so class names must be unique. Vite puts the CSS
+  of the lazy results components into the lazy chunk.
 
 ## Letterboxd export (notes)
 
@@ -85,6 +117,14 @@ The user is learning React and TypeScript. Therefore:
 
 - Code: `src/lib/stats.ts` (pure functions, no React); UI in
   `src/components/StatsSection.tsx` and `StatTable.tsx`.
+- Results page (`Results.tsx`): "Now showing · Your stats" title, the four
+  ticket tiles, notices (failed + Retry, "not found" as `<details>`), "How
+  you rate" (2/3) beside "Latest ratings" (1/3) — all in `ExportSummary` —
+  then a hint line, the four stat cards and the wrap card.
+- Stat cards in a 2-column `.stats-grid` (one column below ~500px per card):
+  Reel 01 Genres and Reel 02 Decades (charts) first, then Reel 03 Actors and
+  Reel 04 Directors (tables). The Chart/Table switch is in the card header;
+  "Show all" is a small secondary button in the footer track.
 - Every table shows 10 rows until "Show all" (`VISIBLE_ROWS` in `StatTable`).
   `.stat-card` is a grid that reserves room for heading, 2-line description,
   header + 10 rows and the button, so collapsed cards are all the same height;
@@ -100,8 +140,9 @@ The user is learning React and TypeScript. Therefore:
   numbers high→low first); clicking it again flips the direction. Ties use
   average ↓, rated ↓, name; groups without an average always go last.
 - Each `GroupStat` carries its `filmList`. Clicking a name opens
-  `FilmListDialog` (native `<dialog>` via `showModal()`, rendered into
-  `<body>` with a portal): films sorted by your rating ↓ (unrated last), then
+  `FilmListDialog`, built on the shared `Modal` (native `<dialog>` via
+  `showModal()`, rendered into `<body>` with a portal; Esc, × and backdrop
+  click close it; `KeySettingsDialog` uses it too): films sorted by your rating ↓ (unrated last), then
   newest first, each linking to its Letterboxd page. Shared helpers such as
   `formatStars` live in `src/lib/format.ts`.
 
@@ -109,25 +150,30 @@ The user is learning React and TypeScript. Therefore:
 
 - Recharts 3. Charts live in `src/components/charts/`; their shared look
   (tick style, grid, bar color, max bar size, reduced-motion switch) is in
-  `chartTheme.ts`.
-- Rating distribution (½★–5★ histogram) sits in the "Your export" card.
-  Genre (horizontal bars) and decade (columns) charts are the default view of
+  `chartTheme.ts`. `chartTheme.ts` also imports `charts.css` (chart plot,
+  key, glass tooltip, mono axis font, glow), so every chart brings its CSS.
+  Recharts 3 draws tick labels in a separate layer
+  (`.recharts-yAxis-tick-labels`), not inside `.yAxis`.
+- Rating distribution (½★–5★ histogram) is the "How you rate" card; it
+  stretches to the height of "Latest ratings" beside it. Genre (horizontal bars) and decade (columns) charts are the default view of
   their stat cards, with a Chart/Table switch (`renderChart` render prop on
   `StatTable`). The chart area has the same height as the table area, so
   cards stay equal. Clicking a bar opens the same `FilmListDialog`.
 - Rules (from the dataviz guidelines): one y-scale per chart, never two —
   extra numbers go in the tooltip or table; one series = one color, no legend
-  box; bars `--color-chart` (#b8862f — the accent #e8b04b failed the palette
-  validator's lightness band for fills on the dark surface), hovered bar
-  lights up to the accent; bars ≤ 24px with 4px rounded ends; hairline solid
-  gridlines; axis text muted, never the bar color; tooltips show the value
-  first; the overall-average reference line is explained by an HTML key above
+  box; bars `--color-chart` (#23a99b — a deeper step of the aqua; the accent
+  itself failed the palette validator's lightness band for fills on the dark
+  surface), the hovered bar lights up to the accent with a glow
+  (`.recharts-active-bar`); bars ≤ 24px with 4px rounded ends; hairline solid
+  gridlines; axis numbers in mono 11px, genre names in the body font, muted,
+  never the bar color; tooltips show the value first, in the display font;
+  the overall-average reference line is explained by an HTML key above
   the plot; the table view is the accessible twin; no animation with
   `prefers-reduced-motion`.
 - Everything that uses Recharts is behind `src/components/Results.tsx`, which
   `App` loads lazily (`React.lazy` + `Suspense`) and starts downloading as
-  soon as a file is chosen. Initial JS ~350 KB (110 KB gzipped), the results
-  chunk ~375 KB.
+  soon as a file is chosen. Initial JS ~360 KB (113 KB gzipped), the results
+  chunk ~376 KB (109 KB gzipped).
 
 ## Deploy (notes)
 
@@ -151,6 +197,8 @@ The user is learning React and TypeScript. Therefore:
 4. Computing the statistics ✓
 5. Charts (Recharts) ✓
 6. Deploy to GitHub Pages (Vite `base` option, GitHub Actions) ✓
+7. v2 redesign: design system, brand and mascot, every screen restyled
+   (branch `redesign`; v1 kept as tag `v1.0`) ✓
 
 ## Commands
 

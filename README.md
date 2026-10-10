@@ -23,7 +23,7 @@ are spread. It runs entirely in your browser.
    ([letterboxd.com/settings/data](https://letterboxd.com/settings/data/)).
    You get a ZIP file.
 2. Open the [site](https://veljkodjur1c.github.io/statsboxd/) and choose the
-   ZIP file, or drop it on the upload card.
+   ZIP file, or drop it anywhere on the upload screen.
 3. The first time, Statsboxd looks up every film on TMDB to get its genres,
    cast and director. This takes about 25 seconds for ~270 films. After that
    the results come from the cache.
@@ -44,8 +44,8 @@ is a deliberate trade-off:
 - The key is read-only and only gives access to public film data.
 - If it is ever misused, the owner creates a new token on TMDB and replaces
   the `VITE_TMDB_TOKEN` secret in the repository. Meanwhile, visitors can
-  keep using the site with their own free key, under **TMDB key settings** in
-  the footer.
+  keep using the site with their own free key: the key button in the top bar
+  opens the TMDB key settings.
 - The only way to fully hide the key would be a small server or proxy between
   the browser and TMDB. That would add a backend to maintain, so it is left
   out on purpose.
@@ -96,10 +96,20 @@ React 19, TypeScript and Vite, plus JSZip (reading the ZIP), PapaParse
 
 ```
 src/
+  index.css     design tokens, base styles and shared parts (cards, buttons)
   lib/          pure logic: parsing the export, TMDB calls and cache, statistics
-  components/   React components (upload, tables, film list dialog)
+  components/   React components, each with its own CSS file next to it
+    brand/      the logo and the projector mascot
     charts/     the Recharts charts and their shared styling
 ```
+
+## Design
+
+The look is a dark projection room: near-black surfaces, aqua (the
+projector's light) for everything you can act on, and amber only for your
+ratings. Headings use Bricolage Grotesque, small labels JetBrains Mono. A
+little projector mascot shows what the app is doing. The first version, with
+a gold theme, is kept as the `v1.0` tag.
 
 ## Credits
 
