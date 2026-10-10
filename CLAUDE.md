@@ -244,7 +244,11 @@ The user is learning React and TypeScript. Therefore:
    3. Remember the last export between visits ✓
    4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time ✓
    5. Privacy line on the upload screen, mobile check ✓
-   6. Shareable summary image
+   6. Shareable summary image — drawn by hand on a `<canvas>`, no library.
+      The data part is done: `shareSummary` in `stats.ts` (headline numbers,
+      top genre with ≥ `SUMMARY_MIN_GENRE_RATED` rated films, top actor,
+      top director). Left: the canvas drawing (wait for `document.fonts.ready`),
+      a "Save image" button on the results page, checks in the browser.
 
 ## Commands
 

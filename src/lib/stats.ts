@@ -387,3 +387,43 @@ export function crowdComparison(
     crowdAverage: mean(films.map((film) => film.crowd)),
   }
 }
+
+// A genre needs this many rated films to be called your "top genre" in the
+// summary: one lucky 5★ film shouldn't decide it.
+export const SUMMARY_MIN_GENRE_RATED = 3
+
+/** The few headline facts shown on the shareable summary image. */
+export type ShareSummary = {
+  year: number | null // null = all time
+  filmsWatched: number
+  filmsRated: number
+  averageRating: number | null
+  hours: number // rounded watch time
+  topGenre: GroupStat | null
+  topActor: GroupStat | null
+  topDirector: GroupStat | null
+}
+
+/**
+ * Picks the headline facts for the summary image from the same data the
+ * results page shows (pass the year-filtered export for a year). The "top"
+ * ones are the best-rated groups; a group is null when nothing qualifies.
+ */
+export function shareSummary(
+  data: LetterboxdExport,
+  tmdb: EnrichResult,
+  year: number | null,
+): ShareSummary {
+  const stats = computeStats(data, tmdb)
+  return {
+    year,
+    filmsWatched: stats.totalFilms,
+    filmsRated: data.ratings.length,
+    averageRating: stats.averageRating,
+    hours: Math.round(watchTime(data, tmdb) / 60),
+    topGenre:
+      stats.genres.find((genre) => genre.rated >= SUMMARY_MIN_GENRE_RATED) ?? null,
+    topActor: stats.actors[0] ?? null,
+    topDirector: stats.directors[0] ?? null,
+  }
+}

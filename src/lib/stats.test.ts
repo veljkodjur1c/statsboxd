@@ -10,6 +10,7 @@ import {
   latestRatings,
   MIN_CROWD_VOTES,
   ratingDistribution,
+  shareSummary,
   sortGroups,
   watchTime,
   type GroupStat,
@@ -318,5 +319,47 @@ describe('crowdComparison', () => {
       yourAverage: null,
       crowdAverage: null,
     })
+  })
+})
+
+// --- shareSummary ------------------------------------------------------------
+
+describe('shareSummary', () => {
+  const data = exportOf({
+    ratings: [rated('a', 5), rated('b', 4), rated('c', 4), rated('d', 5)],
+    watched: [film('a'), film('b'), film('c'), film('d'), film('e')],
+  })
+  const tmdb = enriched({
+    a: tmdbFilm(['Drama', 'Crime'], [ana], [bob], { runtime: 120 }),
+    b: tmdbFilm(['Drama'], [ana], [bob], { runtime: 60 }),
+    c: tmdbFilm(['Drama'], [ana], [], { runtime: 60 }),
+    d: tmdbFilm(['Crime'], [], [], { runtime: 0 }),
+  })
+
+  it('collects the headline numbers', () => {
+    const summary = shareSummary(data, tmdb, 2025)
+    expect(summary).toMatchObject({
+      year: 2025,
+      filmsWatched: 5,
+      filmsRated: 4,
+      hours: 4,
+    })
+    expect(summary.averageRating).toBeCloseTo(4.5)
+  })
+
+  it('picks the top actor and director, and needs 3 rated films for a genre', () => {
+    const summary = shareSummary(data, tmdb, null)
+    expect(summary.topActor?.label).toBe('Ana')
+    expect(summary.topDirector?.label).toBe('Bob')
+    // Crime has 2 rated films (avg 5), Drama has 3 (avg 4.33): only Drama qualifies.
+    expect(summary.topGenre?.label).toBe('Drama')
+  })
+
+  it('has nothing to show without TMDB matches', () => {
+    const summary = shareSummary(data, enriched({}), null)
+    expect(summary.topGenre).toBeNull()
+    expect(summary.topActor).toBeNull()
+    expect(summary.topDirector).toBeNull()
+    expect(summary.hours).toBe(0)
   })
 })
