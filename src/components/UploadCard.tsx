@@ -147,7 +147,10 @@ function UploadCard({
           )}
           <p className="privacy">
             <Icon name="lock" />
-            Everything is processed in your browser.
+            <span>
+              Your export stays in your browser. Only film titles and years
+              are sent to TMDB, to look the films up.
+            </span>
           </p>
         </div>
       </div>

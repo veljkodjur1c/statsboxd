@@ -60,6 +60,12 @@ The user is learning React and TypeScript. Therefore:
   SVGs in `src/components/Icon.tsx` (`IconName` union), no icon package.
 - The closing "That's a wrap." card (`WrapCard`) is deliberately quiet: no
   fill, hairline border, secondary button. It must not compete with the stats.
+- Tap targets are at least 24×24px (WCAG 2.5.8), links inside running text
+  excepted: e.g. the table sort buttons are 32px tall, the footer TMDB logo
+  link 24px. Every screen is checked at 320 / 360 / 414 / 768px for sideways
+  scrolling, content sticking out, and small targets.
+- Privacy wording (upload screen): the export stays in the browser; only
+  film titles and years go to TMDB. Keep it true when data flows change.
 - Motion: every animation sits inside
   `@media (prefers-reduced-motion: no-preference)`, and `index.css` has a
   reduce-motion safety net. Results rise in one block after another; dialogs
@@ -148,7 +154,10 @@ The user is learning React and TypeScript. Therefore:
 - Every table shows 10 rows until "Show all" (`VISIBLE_ROWS` in `StatTable`).
   `.stat-card` is a grid that reserves room for heading, 2-line description,
   header + 10 rows and the button, so collapsed cards are all the same height;
-  rows have a fixed height and long names are ellipsized.
+  rows have a fixed height and long names are ellipsized. `.stat-card` is a
+  size container: below 380px card width (`@container`) the number columns
+  tighten (padding, header letter-spacing, arrow), so names keep ~100px at
+  a 320px screen.
 - Year picker (`YearSelect`, native `<select>`, beside the results title):
   "All time" or a year from the diary (`diaryYears`). `Results` narrows the
   export with `filterByYear` and passes that to everything below it. A year
@@ -234,7 +243,7 @@ The user is learning React and TypeScript. Therefore:
    2. Filter by year watched (`diary.csv` → `Watched Date`) ✓
    3. Remember the last export between visits ✓
    4. TMDB `vote_average` + `runtime`: "You vs. the crowd", total watch time ✓
-   5. Privacy line on the upload screen, mobile check
+   5. Privacy line on the upload screen, mobile check ✓
    6. Shareable summary image
 
 ## Commands

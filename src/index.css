@@ -247,7 +247,14 @@ main {
 }
 
 /* TMDB requires its logo next to the attribution; kept small and quieter
-   than our own branding. */
+   than our own branding. The link is padded to a 24px-tall tap target; the
+   logo itself stays 12px. */
+.tmdb-logo {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+
 .tmdb-logo img {
   display: block;
   width: 92px;

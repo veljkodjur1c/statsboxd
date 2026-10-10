@@ -6,6 +6,8 @@
  * exactly the same height. Expanding one grows only that card.
  */
 .stat-card {
+  /* Lets the rules inside @container below ask how wide this card is. */
+  container-type: inline-size;
   display: grid;
   grid-template-rows:
     auto
@@ -145,10 +147,13 @@
   background: var(--color-surface-2);
 }
 
+/* The label is small, but the button is 32px tall (inside the 44px header
+   row), so it's easy to hit with a finger. */
 .sort-button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-height: 32px;
   padding: 0;
   font: 500 11px/16px var(--font-mono);
   letter-spacing: 0.1em;
@@ -201,4 +206,27 @@ th[aria-sort] .sort-button {
 /* The ellipsis clips the focus ring's sides, so it is drawn inside. */
 .row-button:focus-visible {
   outline-offset: -2px;
+}
+
+/* On a narrow card (a phone), the number columns give up some air so the
+   names get room: less padding, tighter header letters, a smaller arrow. */
+@container (max-width: 380px) {
+  .stat-table th,
+  .stat-table td {
+    padding: 0 4px;
+  }
+
+  .sort-button {
+    gap: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  .sort-arrow,
+  .sort-arrow .icon {
+    width: 10px;
+  }
+
+  .sort-arrow .icon {
+    height: 10px;
+  }
 }
