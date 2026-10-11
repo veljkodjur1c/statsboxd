@@ -304,7 +304,7 @@ The user is learning React and TypeScript. Therefore:
       no library) ✓
 9. Hardening (branch `hardening`): security and edge cases, one commit ✓
    (tag `v3.1`).
-10. v4.0 (branch `v4`):
+10. v4.0 (branch `v4`, merged to `main`, tag `v4.0`) ✓:
     1. Image preview before saving ✓
     2. Rating vs. runtime: which film lengths you like most ✓
     3. Activity over time: a month calendar of the diary ✓

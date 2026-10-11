@@ -13,16 +13,19 @@ are spread. It runs entirely in your browser.
 - **Filter by year**: see the stats for any year from your diary, or all
   time.
 - **How you rate**: a histogram of your ratings, from ½★ to 5★.
-- **Average rating by genre** and **by decade**, each as a chart or a table.
+- **Average rating by genre**, **by decade** and **by runtime** (under 90
+  minutes up to 180+), each as a chart or a table.
 - **Top actors** and **top directors** by your average rating.
 - Sortable tables: click a column header, and click it again to flip the
   direction.
 - Click any name or bar to see every film behind it, with your rating and a
   link to Letterboxd.
+- **Activity**: your diary as a month calendar. Days you logged films are
+  marked with a dot per film; pick a day to see them.
 - **You vs. the crowd**: your ratings next to the TMDB average, with the
   films you liked most above and most below everyone else.
 - **Save image**: a shareable 1080×1350 summary of the year (or all time),
-  drawn in the browser.
+  drawn in the browser, with a preview before you download it.
 - Your last export is remembered, so you can come back without uploading it
   again, and film details are cached, so a second upload is instant.
 
