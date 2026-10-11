@@ -1,0 +1,20 @@
+/* The "Technical details" under the crash message: quiet, and it must wrap
+   long error text instead of pushing the page sideways. */
+.crash-details {
+  margin-top: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.crash-details summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.crash-details p {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}

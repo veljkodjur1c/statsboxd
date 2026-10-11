@@ -1,5 +1,5 @@
 import type { Film } from './letterboxd.ts'
-import { fetchTmdbFilm, TmdbAuthError, type TmdbFilm } from './tmdb.ts'
+import { fetchTmdbFilm, isTmdbFilm, TmdbAuthError, type TmdbFilm } from './tmdb.ts'
 
 // Bump the version when the shape of TmdbFilm changes, so old entries are
 // ignored, and add the old key to OLD_CACHE_KEYS so it's deleted.
@@ -28,7 +28,15 @@ function loadCache(): Cache {
       localStorage.removeItem(key)
     }
     const raw = localStorage.getItem(CACHE_KEY)
-    return raw ? (JSON.parse(raw) as Cache) : {}
+    const parsed: unknown = raw ? JSON.parse(raw) : {}
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return {}
+    }
+    // Keep only entries of the right shape; a damaged one is just fetched
+    // again instead of breaking the statistics.
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([, value]) => value === null || isTmdbFilm(value)),
+    ) as Cache
   } catch {
     return {} // storage blocked or corrupted: start with an empty cache
   }

@@ -3,6 +3,7 @@ import type { EnrichResult } from './enrich.ts'
 import type { Film, LetterboxdExport, RatedFilm } from './letterboxd.ts'
 import {
   computeStats,
+  countFilms,
   crowdComparison,
   diaryYears,
   filterByYear,
@@ -361,5 +362,129 @@ describe('shareSummary', () => {
     expect(summary.topActor).toBeNull()
     expect(summary.topDirector).toBeNull()
     expect(summary.hours).toBe(0)
+  })
+})
+
+// --- Edge cases --------------------------------------------------------------
+
+describe('an export with nothing in it', () => {
+  const empty = exportOf({})
+
+  it('gives empty statistics instead of NaN or errors', () => {
+    const stats = computeStats(empty, enriched({}))
+    expect(stats).toMatchObject({
+      genres: [],
+      actors: [],
+      directors: [],
+      decades: [],
+      averageRating: null,
+      matchedFilms: 0,
+      totalFilms: 0,
+    })
+  })
+
+  it('has no years, no latest films, no crowd, no watch time', () => {
+    expect(diaryYears(empty)).toEqual([])
+    expect(latestRatings(empty, 5)).toEqual([])
+    expect(latestDiaryEntries(empty, 5)).toEqual([])
+    expect(crowdComparison(empty, enriched({}))).toEqual({
+      films: [],
+      yourAverage: null,
+      crowdAverage: null,
+    })
+    expect(watchTime(empty, enriched({}))).toBe(0)
+    expect(countFilms(empty)).toBe(0)
+  })
+
+  it('has a summary with nothing in it', () => {
+    expect(shareSummary(empty, enriched({}), null)).toEqual({
+      year: null,
+      filmsWatched: 0,
+      filmsRated: 0,
+      averageRating: null,
+      hours: 0,
+      topGenre: null,
+      topActor: null,
+      topDirector: null,
+    })
+  })
+
+  it('sorts an empty list', () => {
+    expect(sortGroups([], 'average', 'desc')).toEqual([])
+  })
+})
+
+describe('an export without ratings', () => {
+  const data = exportOf({ watched: [film('a', 1995), film('b', 2004)] })
+  const tmdb = enriched({
+    a: tmdbFilm(['Drama'], [ana], [bob], { runtime: 100 }),
+    b: tmdbFilm(['Drama'], [ana], [bob], { runtime: 80 }),
+  })
+
+  it('lists no genre, actor or director, since none has a rated film', () => {
+    const stats = computeStats(data, tmdb)
+    expect(stats.genres).toEqual([])
+    expect(stats.actors).toEqual([])
+    expect(stats.directors).toEqual([])
+    expect(stats.averageRating).toBeNull()
+  })
+
+  it('still lists the decades, with no average', () => {
+    const { decades } = computeStats(data, tmdb)
+    expect(labels(decades)).toEqual(['1990s', '2000s'])
+    expect(decades.every((decade) => decade.average === null && decade.rated === 0)).toBe(true)
+  })
+
+  it('still counts films and watch time', () => {
+    expect(countFilms(data)).toBe(2)
+    expect(watchTime(data, tmdb)).toBe(180)
+  })
+})
+
+describe('countFilms', () => {
+  it('counts rated films even when watched.csv is missing', () => {
+    expect(countFilms(exportOf({ ratings: [rated('a', 4), rated('b', 3)] }))).toBe(2)
+  })
+
+  it('counts a film listed twice once', () => {
+    const data = exportOf({ watched: [film('a'), film('a')], ratings: [rated('a', 4)] })
+    expect(countFilms(data)).toBe(1)
+  })
+})
+
+describe('odd dates in the diary', () => {
+  const entry = (watchedDate: string) => ({ letterboxdUri: 'a', watchedDate })
+  const data = exportOf({
+    ratings: [rated('a', 4)],
+    watched: [film('a')],
+    diary: [entry('2025-03-04'), entry(''), entry('abc'), entry('0000-00-00'), entry('25')],
+  })
+
+  it('lists only real years', () => {
+    expect(diaryYears(data)).toEqual([2025])
+  })
+
+  it('does not put entries with odd dates into a listed year', () => {
+    expect(filterByYear(data, 2025).diary).toHaveLength(1)
+  })
+})
+
+describe('a single rating', () => {
+  it('works as a one-film export', () => {
+    const data = exportOf({ ratings: [rated('a', 5, 2019)], watched: [film('a', 2019)] })
+    const tmdb = enriched({ a: tmdbFilm(['Drama'], [ana], [bob]) })
+    const stats = computeStats(data, tmdb)
+    expect(stats.averageRating).toBe(5)
+    expect(labels(stats.genres)).toEqual(['Drama'])
+    expect(stats.actors).toEqual([]) // needs 3 rated films
+    expect(stats.directors).toEqual([]) // needs 2
+    expect(labels(stats.decades)).toEqual(['2010s'])
+  })
+})
+
+describe('ratingDistribution with bad values', () => {
+  it('ignores ratings outside ½★–5★', () => {
+    const bins = ratingDistribution([{ rating: 0 }, { rating: 6 }, { rating: NaN }, { rating: 3 }])
+    expect(bins.reduce((sum, bin) => sum + bin.count, 0)).toBe(1)
   })
 })

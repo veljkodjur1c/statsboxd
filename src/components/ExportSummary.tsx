@@ -3,6 +3,7 @@ import type { EnrichResult } from '../lib/enrich.ts'
 import { formatDate } from '../lib/format.ts'
 import type { Film, LetterboxdExport } from '../lib/letterboxd.ts'
 import {
+  countFilms,
   latestDiaryEntries,
   latestRatings,
   ratingDistribution,
@@ -24,7 +25,7 @@ const LATEST_COUNT = 5
 
 /** The top of the results: four headline numbers, notices, and how you rate. */
 function ExportSummary({ data, year, tmdb, onRetry }: ExportSummaryProps) {
-  const { ratings, watched } = data
+  const { ratings } = data
 
   const average =
     ratings.length > 0
@@ -45,7 +46,7 @@ function ExportSummary({ data, year, tmdb, onRetry }: ExportSummaryProps) {
     <>
       <div className="tiles">
         <Tile label="Films watched" icon="eye">
-          {watched.length}
+          {countFilms(data)}
         </Tile>
         <Tile label="Films rated" icon="star">
           {ratings.length}

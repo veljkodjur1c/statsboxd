@@ -16,7 +16,44 @@ export type TmdbFilm = {
   runtime: number | null // minutes; null if TMDB doesn't know
 }
 
-const API_BASE = 'https://api.themoviedb.org/3'
+const isPerson = (value: unknown): value is Person =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Person).id === 'number' &&
+  typeof (value as Person).name === 'string'
+
+/**
+ * True if `value` has the shape of a TmdbFilm. Used on the cache read back
+ * from localStorage, which may be stale, damaged or hand-edited.
+ */
+export function isTmdbFilm(value: unknown): value is TmdbFilm {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  const film = value as Record<string, unknown>
+  // A number in [min, max], or null. Rules out NaN, Infinity and nonsense
+  // like a negative runtime, which would corrupt the totals.
+  const isNullableIn = (item: unknown, min: number, max: number) =>
+    item === null ||
+    (typeof item === 'number' && item >= min && item <= max)
+  return (
+    typeof film.tmdbId === 'number' &&
+    typeof film.title === 'string' &&
+    Array.isArray(film.genres) &&
+    film.genres.every((genre) => typeof genre === 'string') &&
+    Array.isArray(film.cast) &&
+    film.cast.every(isPerson) &&
+    Array.isArray(film.directors) &&
+    film.directors.every(isPerson) &&
+    isNullableIn(film.voteAverage, 0, 10) &&
+    typeof film.voteCount === 'number' &&
+    film.voteCount >= 0 &&
+    Number.isFinite(film.voteCount) &&
+    isNullableIn(film.runtime, 0, 100_000)
+  )
+}
+
+const API_BASE ='https://api.themoviedb.org/3'
 const USER_TOKEN_KEY = 'statsboxd:tmdbToken'
 const CAST_LIMIT = 15
 const MAX_RETRIES = 3
@@ -61,7 +98,21 @@ export function clearUserToken() {
 /** The user's own key wins; otherwise the one built into the app (if any). */
 export function getTmdbToken(): string | null {
   const builtIn = import.meta.env.VITE_TMDB_TOKEN?.trim()
-  return getUserToken() ?? (builtIn ? builtIn : null)
+  const own = getUserToken()
+  if (own !== null && isTokenFormat(own)) {
+    return own
+  }
+  return builtIn ? builtIn : null
+}
+
+/**
+ * TMDB keys are letters, digits and a few separators (a JWT has dots). A
+ * pasted key with spaces, quotes or non-ASCII characters can't be sent in a
+ * header: fetch would throw, which looks like a network error and gets
+ * retried for every single film.
+ */
+export function isTokenFormat(token: string): boolean {
+  return /^[A-Za-z0-9._~+/=-]{8,}$/.test(token)
 }
 
 // TMDB has two credential types. The long "Read Access Token" (a JWT) goes in
@@ -125,17 +176,19 @@ type SearchResponse = {
   results: { id: number; release_date?: string }[]
 }
 
+// Everything TMDB might leave out is optional: a movie page with missing
+// parts still gives a usable (if emptier) film instead of an error.
 type MovieResponse = {
-  id: number
-  title: string
-  genres: { id: number; name: string }[]
-  vote_average: number
-  vote_count: number
-  runtime: number | null
-  credits: {
-    cast: { id: number; name: string }[]
-    crew: { id: number; name: string; job: string }[]
-  }
+  id?: number
+  title?: string
+  genres?: { id: number; name: string }[] | null
+  vote_average?: number
+  vote_count?: number
+  runtime?: number | null
+  credits?: {
+    cast?: { id: number; name: string }[] | null
+    crew?: { id: number; name: string; job: string }[] | null
+  } | null
 }
 
 async function searchMovies(
@@ -143,7 +196,7 @@ async function searchMovies(
   token: string,
 ): Promise<SearchResponse['results']> {
   const response = await tmdbGet<SearchResponse>('/search/movie', params, token)
-  return response.results
+  return response.results ?? []
 }
 
 function releaseYear(result: { release_date?: string }): number | null {
@@ -193,23 +246,30 @@ export async function fetchTmdbFilm(
   )
 
   const directors = new Map<number, string>()
-  for (const member of movie.credits.crew) {
-    if (member.job === 'Director') {
+  for (const member of movie.credits?.crew ?? []) {
+    if (member.job === 'Director' && isPerson(member)) {
       directors.set(member.id, member.name)
     }
   }
 
+  const voteCount = typeof movie.vote_count === 'number' ? movie.vote_count : 0
+  const runtime = typeof movie.runtime === 'number' ? movie.runtime : 0
+
   return {
-    tmdbId: movie.id,
-    title: movie.title,
-    genres: movie.genres.map((genre) => genre.name),
-    cast: movie.credits.cast
+    tmdbId: movie.id ?? id,
+    title: typeof movie.title === 'string' ? movie.title : film.name,
+    genres: (movie.genres ?? [])
+      .map((genre) => genre?.name)
+      .filter((name) => typeof name === 'string'),
+    cast: (movie.credits?.cast ?? [])
       .slice(0, CAST_LIMIT)
+      .filter(isPerson)
       .map((actor) => ({ id: actor.id, name: actor.name })),
     directors: [...directors].map(([id, name]) => ({ id, name })),
     // TMDB sends 0 (not null) when there are no votes or no runtime.
-    voteAverage: movie.vote_count > 0 ? movie.vote_average : null,
-    voteCount: movie.vote_count,
-    runtime: movie.runtime ? movie.runtime : null,
+    voteAverage:
+      voteCount > 0 && typeof movie.vote_average === 'number' ? movie.vote_average : null,
+    voteCount,
+    runtime: runtime > 0 ? runtime : null,
   }
 }

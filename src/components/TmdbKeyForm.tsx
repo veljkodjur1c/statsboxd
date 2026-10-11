@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { clearUserToken, getUserToken, saveUserToken } from '../lib/tmdb.ts'
+import {
+  clearUserToken,
+  getUserToken,
+  isTokenFormat,
+  saveUserToken,
+} from '../lib/tmdb.ts'
 import Icon from './Icon.tsx'
 import './TmdbKeyForm.css'
 
@@ -19,6 +24,12 @@ function TmdbKeyForm({ onChange }: TmdbKeyFormProps) {
     event.preventDefault()
     const key = value.trim()
     if (key === '') {
+      return
+    }
+    if (!isTokenFormat(key)) {
+      setError(
+        "That doesn't look like a TMDB key. Copy it again from your TMDB API settings.",
+      )
       return
     }
     if (!saveUserToken(key)) {

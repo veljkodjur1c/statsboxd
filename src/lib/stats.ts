@@ -1,5 +1,5 @@
 import type { EnrichResult } from './enrich.ts'
-import type { Film, LetterboxdExport } from './letterboxd.ts'
+import { isIsoDate, type Film, type LetterboxdExport } from './letterboxd.ts'
 import type { Person, TmdbFilm } from './tmdb.ts'
 
 /** A film as listed in a group's detail view. */
@@ -44,6 +44,11 @@ function uniqueFilms(data: LetterboxdExport): Film[] {
   return [...films.values()]
 }
 
+/** How many different films the export has (watched ∪ rated). */
+export function countFilms(data: LetterboxdExport): number {
+  return uniqueFilms(data).length
+}
+
 const ratingsByUri = (data: LetterboxdExport) =>
   new Map(data.ratings.map((film) => [film.letterboxdUri, film.rating]))
 
@@ -75,7 +80,8 @@ export function ratingDistribution(ratings: { rating: number }[]): RatingBin[] {
   return bins
 }
 
-const yearOf = (date: string) => Number(date.slice(0, 4))
+// 0 (never a real year) for anything that isn't a "YYYY-MM-DD" date.
+const yearOf = (date: string) => (isIsoDate(date) ? Number(date.slice(0, 4)) : 0)
 
 /** Years you logged a film in your diary, newest first. */
 export function diaryYears(data: LetterboxdExport): number[] {

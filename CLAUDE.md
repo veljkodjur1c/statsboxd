@@ -96,12 +96,15 @@ The user is learning React and TypeScript. Therefore:
 - In `diary.csv`, `Letterboxd URI` links to the diary entry, not the film, so
   it never matches `watched.csv`. Diary entries are linked to films by name +
   year instead (`parseDiary`); `Watched Date` is the day the film was seen.
-- Parsing lives in `src/lib/letterboxd.ts`.
+- Parsing lives in `src/lib/letterboxd.ts`. Rows are validated (see
+  "Security and robustness"): no name or a link that isn't Letterboxd drops
+  the row, dates must be `YYYY-MM-DD`, years 1850–2100 (else null).
 - The parsed export is remembered (`src/lib/savedExport.ts`, localStorage
   `statsboxd:export:v1`, ~60 KB for 268 films): the upload screen then offers
-  "Continue with last export" and "Forget it". The JSON is shape-checked on
-  load; bump the version when `LetterboxdExport` changes. If saving fails,
-  the older one is removed so a stale export is never offered.
+  "Continue with last export" and "Forget it". Every item is shape-checked on
+  load (one bad item rejects the export); bump the version when
+  `LetterboxdExport` changes. If saving fails, the older one is removed so a
+  stale export is never offered.
 - The export has no TMDB IDs — films are matched via TMDB search by title + year.
 
 ## TMDB (notes)
@@ -122,7 +125,11 @@ The user is learning React and TypeScript. Therefore:
 - Cache: localStorage `statsboxd:tmdb:v2`, keyed by Letterboxd URI; `null`
   means "no TMDB match". Bump the version when `TmdbFilm` changes and add the
   old key to `OLD_CACHE_KEYS` (in `enrich.ts`), which deletes it. Failed
-  requests are not cached, so "Retry" refetches only those.
+  requests are not cached, so "Retry" refetches only those. Entries read back
+  are checked with `isTmdbFilm`; a damaged one is simply fetched again.
+- A movie page with missing parts (no credits, `genres: null`) still gives a
+  film with empty lists. A pasted key that isn't key-shaped (`isTokenFormat`)
+  is refused by the form: it can't go in a header and would be retried per film.
 - 4 films in flight at once. Every request also triggers a CORS preflight, and
   TMDB's 429 on a preflight reaches `fetch` as a plain network error — so
   network errors are retried (growing delay) just like a 429. After 8
@@ -260,6 +267,34 @@ The user is learning React and TypeScript. Therefore:
    5. Privacy line on the upload screen, mobile check ✓
    6. Shareable summary image ("Save image", drawn by hand on a `<canvas>`,
       no library) ✓
+9. Hardening (branch `hardening`): security and edge cases, one commit ✓.
+   Next version, planned: image preview before saving, rating vs. runtime,
+   activity over time (heatmap).
+
+## Security and robustness (notes)
+
+- Everything from outside is untrusted: the ZIP, localStorage, TMDB answers.
+  Types don't check anything at runtime, so each has a real guard.
+- Links: film URIs go into `<a href>`, so only http(s) links to
+  `letterboxd.com` / `boxd.it` pass (`isLetterboxdUrl`), both when parsing
+  and when reading the saved export. A `javascript:` link would run code with
+  access to the TMDB key in localStorage.
+- Size limits (`MAX_ZIP_BYTES` 50 MB, `MAX_CSV_BYTES` 25 MB): the declared
+  uncompressed size is checked before inflating, against ZIP bombs.
+- Dates are compared as strings, so only `YYYY-MM-DD` is accepted
+  (`isIsoDate`); otherwise "abc" would sort as the newest date.
+- "Films watched" is `countFilms` (watched ∪ rated, once each), the same
+  number the share image uses; it works without `watched.csv`.
+- `ErrorBoundary` (class component, wraps `App` in `main.tsx`) shows
+  `CrashScreen` instead of a blank page; the error text is rendered as text.
+- Content-Security-Policy: a `<meta>` tag added to the production build only
+  (plugin in `vite.config.ts`; the dev server needs an inline script). Scripts
+  `'self'`, connections only to `api.themoviedb.org`, Google Fonts allowed.
+  Anything new that loads from another host must be added there, or it is
+  blocked. `<meta name="referrer" content="no-referrer">` is in `index.html`.
+  GitHub Pages can't send headers, so `frame-ancestors` is not possible.
+- Checked in a real browser (headless Edge over CDP, `npm run preview`):
+  the full flow with a real export gives no CSP violations.
 
 ## Commands
 

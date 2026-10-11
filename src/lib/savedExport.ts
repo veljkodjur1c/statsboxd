@@ -1,4 +1,11 @@
-import type { LetterboxdExport } from './letterboxd.ts'
+import {
+  isIsoDate,
+  isLetterboxdUrl,
+  type DiaryEntry,
+  type Film,
+  type LetterboxdExport,
+  type RatedFilm,
+} from './letterboxd.ts'
 
 // Bump the version when the shape of LetterboxdExport changes, so an old
 // saved export is ignored instead of breaking the stats.
@@ -17,18 +24,56 @@ function today(): string {
   return `${now.getFullYear()}-${month}-${day}`
 }
 
+type Fields = Record<string, unknown>
+
+const isObject = (value: unknown): value is Fields =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+function isFilm(value: unknown): value is Film {
+  return (
+    isObject(value) &&
+    typeof value.name === 'string' &&
+    (value.date === '' || isIsoDate(value.date)) &&
+    (value.year === null || Number.isFinite(value.year)) &&
+    // The link ends up in <a href>, so it must be a Letterboxd page.
+    isLetterboxdUrl(value.letterboxdUri)
+  )
+}
+
+function isRatedFilm(value: unknown): value is RatedFilm {
+  return (
+    isFilm(value) &&
+    typeof (value as Fields).rating === 'number' &&
+    (value as RatedFilm).rating > 0 &&
+    (value as RatedFilm).rating <= 5
+  )
+}
+
+function isDiaryEntry(value: unknown): value is DiaryEntry {
+  return (
+    isObject(value) &&
+    isLetterboxdUrl(value.letterboxdUri) &&
+    isIsoDate(value.watchedDate)
+  )
+}
+
 // localStorage holds whatever was written there, possibly by an older version
-// of the app, so check the shape before trusting it.
+// of the app (or by someone with access to this browser), so check every
+// item's shape before trusting it. One bad item rejects the whole export:
+// the user just uploads the ZIP again.
 function isSavedExport(value: unknown): value is SavedExport {
-  if (typeof value !== 'object' || value === null) {
+  if (!isObject(value) || typeof value.savedAt !== 'string') {
     return false
   }
-  const { data, savedAt } = value as Partial<SavedExport>
+  const { data } = value
   return (
-    typeof savedAt === 'string' &&
-    Array.isArray(data?.ratings) &&
-    Array.isArray(data?.watched) &&
-    Array.isArray(data?.diary)
+    isObject(data) &&
+    Array.isArray(data.ratings) &&
+    data.ratings.every(isRatedFilm) &&
+    Array.isArray(data.watched) &&
+    data.watched.every(isFilm) &&
+    Array.isArray(data.diary) &&
+    data.diary.every(isDiaryEntry)
   )
 }
 
