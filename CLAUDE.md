@@ -164,7 +164,8 @@ The user is learning React and TypeScript. Therefore:
   "Show all" is a small secondary button in the footer track.
 - Reel 06 Activity (`ActivityCard`, `diaryByDay`, `monthWeeks`,
   `monthSummary`, `diaryMonthRange`): the diary as a month calendar
-  (Monday first, UTC dates), one month at a time — the user chose this over
+  (Monday first, UTC dates, always 6 week rows so nothing below it moves
+  when the month changes), one month at a time — the user chose this over
   a whole-year grid. Days with films are buttons filled `--color-day-logged`
   with a white number and one aqua dot per film (up to 3, "3+"; the user
   didn't want dark digits on lighter shades), with "N March: 2 films"

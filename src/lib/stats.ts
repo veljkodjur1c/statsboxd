@@ -226,6 +226,10 @@ export function diaryMonthRange(days: DiaryByDay): { first: Month; last: Month }
   return { first: monthOf(first), last: monthOf(last) }
 }
 
+// A month spans at most 6 calendar weeks (a 31-day month starting on a
+// Saturday or Sunday).
+const WEEKS_SHOWN = 6
+
 /** One square of the month calendar. */
 export type CalendarDay = {
   date: string // "YYYY-MM-DD"
@@ -235,7 +239,9 @@ export type CalendarDay = {
 
 /**
  * The month as calendar weeks, Monday first. Days outside the month are
- * null, so every week has exactly 7 places.
+ * null, so every week has exactly 7 places. There are always 6 weeks (the
+ * most a month can need), so the calendar keeps one height whichever month
+ * is shown.
  */
 export function monthWeeks(month: Month, days: DiaryByDay): (CalendarDay | null)[][] {
   // Date.UTC avoids time zones: the same date is the same weekday everywhere.
@@ -249,7 +255,7 @@ export function monthWeeks(month: Month, days: DiaryByDay): (CalendarDay | null)
     const date = `${monthPrefix(month)}-${String(day).padStart(2, '0')}`
     places.push({ date, day, films: days.get(date) ?? [] })
   }
-  while (places.length % 7 !== 0) {
+  while (places.length < WEEKS_SHOWN * 7) {
     places.push(null)
   }
 

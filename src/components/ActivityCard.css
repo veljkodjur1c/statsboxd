@@ -85,7 +85,10 @@
   color: var(--color-text-muted);
 }
 
+/* A fixed row height, so an empty week (or a day outside the month) keeps
+   its place and the calendar is the same height in every month. */
 .activity-calendar td {
+  height: 36px;
   padding: 0;
 }
 

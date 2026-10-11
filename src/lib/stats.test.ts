@@ -257,6 +257,14 @@ describe('diary calendar', () => {
     expect(weeks[5].slice(1)).toEqual([null, null, null, null, null, null])
   })
 
+  it('always has 6 weeks, so the calendar keeps its height', () => {
+    // February 2021 starts on a Monday and fits in exactly 4 weeks.
+    const february = monthWeeks({ year: 2021, month: 2 }, new Map())
+    expect(february).toHaveLength(6)
+    expect(february[4].every((day) => day === null)).toBe(true)
+    expect(february[5].every((day) => day === null)).toBe(true)
+  })
+
   it('knows how long February is in a leap year', () => {
     const days = monthWeeks({ year: 2024, month: 2 }, new Map()).flat()
     expect(days.filter((day) => day !== null)).toHaveLength(29)
