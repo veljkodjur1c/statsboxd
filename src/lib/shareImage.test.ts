@@ -1,13 +1,67 @@
 import { describe, expect, it } from 'vitest'
-import { fitFontSize, shareFileName, truncateToWidth } from './shareImage.ts'
+import {
+  fitFontSize,
+  shareFileName,
+  shareImageAlt,
+  shareTitle,
+  truncateToWidth,
+} from './shareImage.ts'
+import type { GroupStat, ShareSummary } from './stats.ts'
 
 // A pretend font where every character is 10px wide.
 const measure = (text: string) => Array.from(text).length * 10
+
+function group(label: string, average: number | null): GroupStat {
+  return { key: label, label, films: 3, rated: 3, average, filmList: [] }
+}
+
+const summary: ShareSummary = {
+  year: 2025,
+  filmsWatched: 1234,
+  filmsRated: 98,
+  averageRating: 3.6178,
+  hours: 210,
+  topGenre: group('Drama', 4.1),
+  topActor: group('Tilda Swinton', 4.333),
+  topDirector: group('Agnès Varda', 4.5),
+}
 
 describe('shareFileName', () => {
   it('names the file after the year, or all time', () => {
     expect(shareFileName(2025)).toBe('statsboxd-2025.png')
     expect(shareFileName(null)).toBe('statsboxd-all-time.png')
+  })
+})
+
+describe('shareTitle', () => {
+  it('names the year, or all time', () => {
+    expect(shareTitle(2025)).toBe('My 2025 in film')
+    expect(shareTitle(null)).toBe('My all-time stats')
+  })
+})
+
+describe('shareImageAlt', () => {
+  it('reads out the numbers and the top picks', () => {
+    expect(shareImageAlt(summary)).toBe(
+      'My 2025 in film: 1,234 films watched, 98 rated, average rating 3.62 stars, ' +
+        '210 hours of watch time. Top genre: Drama, 4.10 stars. ' +
+        'Top actor: Tilda Swinton, 4.33 stars. Top director: Agnès Varda, 4.50 stars.',
+    )
+  })
+
+  it('leaves out what the image shows as a dash', () => {
+    const empty: ShareSummary = {
+      ...summary,
+      year: null,
+      filmsWatched: 1,
+      filmsRated: 0,
+      averageRating: null,
+      hours: 0,
+      topGenre: null,
+      topActor: group('Unrated', null),
+      topDirector: null,
+    }
+    expect(shareImageAlt(empty)).toBe('My all-time stats: 1 film watched, 0 rated.')
   })
 })
 

@@ -118,7 +118,8 @@ a {
   color: var(--color-accent);
 }
 
-a:hover {
+/* A link styled as a button (the image download) keeps the button's colours. */
+a:not(.button):hover {
   color: var(--color-accent-hover);
 }
 
@@ -456,6 +457,7 @@ main {
   font: 600 15px/1 var(--font-body);
   color: var(--color-on-accent);
   white-space: nowrap;
+  text-decoration: none;
   background: var(--color-accent);
   border: 1px solid transparent;
   border-radius: var(--radius);

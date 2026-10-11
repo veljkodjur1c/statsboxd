@@ -1,19 +1,7 @@
-/* "Save image", with room for a short error under it. */
-.share-button {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-1);
-}
-
-.share-button-error {
-  font-size: 0.8125rem;
-  color: var(--color-error);
-}
-
-/* On the smallest phones a little less padding lets it sit beside the year
-   picker instead of wrapping under it. */
+/* On the smallest phones a little less padding lets "Save image" sit beside
+   the year picker instead of wrapping under it. */
 @media (max-width: 359px) {
-  .share-button .button {
+  .button.share-button {
     padding: 0 14px;
   }
 }

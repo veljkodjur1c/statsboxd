@@ -187,6 +187,13 @@ The user is learning React and TypeScript. Therefore:
   `document.fonts.ready`) because a canvas doesn't wait for web fonts. Long
   names shrink, then get "…" (`fitFontSize`, `truncateToWidth`). Saved as
   `statsboxd-2025.png` / `statsboxd-all-time.png`.
+- "Save image" opens `SharePreviewDialog` (on `Modal`): the summary is taken
+  on click, the PNG is drawn in an effect and shown as an `<img>` from an
+  object URL (`blob:`, allowed by the CSP `img-src`), with `shareImageAlt` as
+  its alt text. "Download image" is a real `<a download>` to the same URL;
+  the dialog stays open after it. The URL is revoked when the dialog closes.
+  The preview is sized so the dialog doesn't scroll (except a phone held
+  sideways).
 - Films = `watched` ∪ `ratings`, one entry per Letterboxd URI.
 - Per group: Films = watched films, Rated = rated films, Avg = average of the
   ratings (unrated films don't affect it).
@@ -267,9 +274,12 @@ The user is learning React and TypeScript. Therefore:
    5. Privacy line on the upload screen, mobile check ✓
    6. Shareable summary image ("Save image", drawn by hand on a `<canvas>`,
       no library) ✓
-9. Hardening (branch `hardening`): security and edge cases, one commit ✓.
-   Next version, planned: image preview before saving, rating vs. runtime,
-   activity over time (heatmap).
+9. Hardening (branch `hardening`): security and edge cases, one commit ✓
+   (tag `v3.1`).
+10. v4.0 (branch `v4`):
+    1. Image preview before saving ✓
+    2. Rating vs. runtime: which film lengths you like most
+    3. Activity over time: heatmap from the diary's `Watched Date`
 
 ## Security and robustness (notes)
 

@@ -21,6 +21,36 @@ export function shareFileName(year: number | null): string {
   return `statsboxd-${year ?? 'all-time'}.png`
 }
 
+/** The image's title: "My 2025 in film", or "My all-time stats". */
+export function shareTitle(year: number | null): string {
+  return year === null ? 'My all-time stats' : `My ${year} in film`
+}
+
+/**
+ * The image in words, for the preview's alt text: what a screen reader says
+ * instead of showing the picture. The same facts as the drawing; the ones it
+ * shows as "—" are left out.
+ */
+export function shareImageAlt(summary: ShareSummary): string {
+  const watched = summary.filmsWatched
+  const numbers = [
+    `${watched.toLocaleString('en-US')} ${watched === 1 ? 'film' : 'films'} watched`,
+    `${summary.filmsRated.toLocaleString('en-US')} rated`,
+  ]
+  if (summary.averageRating !== null) {
+    numbers.push(`average rating ${summary.averageRating.toFixed(2)} stars`)
+  }
+  if (summary.hours > 0) {
+    numbers.push(`${summary.hours.toLocaleString('en-US')} hours of watch time`)
+  }
+  const picks = sharePicks(summary).flatMap(({ label, group }) =>
+    group === null || group.average === null
+      ? []
+      : [`${label}: ${group.label}, ${group.average.toFixed(2)} stars.`],
+  )
+  return [`${shareTitle(summary.year)}: ${numbers.join(', ')}.`, ...picks].join(' ')
+}
+
 /**
  * `text` if it fits in `maxWidth`, otherwise its longest start that fits
  * with "…" after it. `measure` gives a string's width; on a canvas that is
@@ -208,7 +238,7 @@ function drawShareImage(
   setFont(ctx, theme, KICKER)
   ctx.fillStyle = theme.muted
   ctx.fillText('NOW SHOWING', MARGIN, 216)
-  const title = summary.year === null ? 'My all-time stats' : `My ${summary.year} in film`
+  const title = shareTitle(summary.year)
   setFont(ctx, theme, TITLE)
   setFont(ctx, theme, TITLE, fitFontSize(textWidth(ctx, title), CONTENT_WIDTH, TITLE.size, 72))
   ctx.fillStyle = theme.text
@@ -244,11 +274,7 @@ function drawShareImage(
     )
   })
 
-  drawPicks(ctx, theme, [
-    { label: 'Top genre', group: summary.topGenre },
-    { label: 'Top actor', group: summary.topActor },
-    { label: 'Top director', group: summary.topDirector },
-  ])
+  drawPicks(ctx, theme, sharePicks(summary))
 
   // Footer: where it was made, and where the film data comes from.
   setFont(ctx, theme, FOOTER)
@@ -418,6 +444,14 @@ function drawTile(
 type Pick = {
   label: string // "Top genre"
   group: GroupStat | null // null when nothing qualifies
+}
+
+function sharePicks(summary: ShareSummary): Pick[] {
+  return [
+    { label: 'Top genre', group: summary.topGenre },
+    { label: 'Top actor', group: summary.topActor },
+    { label: 'Top director', group: summary.topDirector },
+  ]
 }
 
 const PICKS = {
