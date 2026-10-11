@@ -33,9 +33,11 @@ const ICONS = {
   ),
   gauge: (
     <>
-      <path d="M3.5 17.5a8.5 8.5 0 0 1 17 0" />
-      <path d="M12 17.5 16 12" />
-      <path d="M6.5 13.5 7.6 14.2M12 9v1.4M17.5 13.5l-1.1.7" />
+      {/* A half dial. Its shapes span y 7.5–16, centred on the grid, so it
+          sits in the middle of round frames like the tile icon. */}
+      <path d="M3.5 16a8.5 8.5 0 0 1 17 0" />
+      <path d="M12 16 16 10.5" />
+      <path d="M6.5 12 7.6 12.7M12 7.5v1.4M17.5 12l-1.1.7" />
     </>
   ),
   check: (

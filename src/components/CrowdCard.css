@@ -17,11 +17,20 @@
   color: var(--color-text-muted);
 }
 
+/* The two lists are panels of their own inside the card: a raised surface
+   and a clear gap, so "more" and "less" read as separate halves. */
 .crowd-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-5);
+  gap: var(--space-3);
   margin-top: var(--space-4);
+}
+
+.crowd-column {
+  min-width: 0;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  background: var(--color-surface-2);
+  border-radius: var(--radius);
 }
 
 .crowd-column-title {
@@ -47,5 +56,17 @@
 @media (max-width: 720px) {
   .crowd-columns {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* On a phone the panels give back some width, so titles and their
+   "year · crowd" line don't wrap. */
+@media (max-width: 480px) {
+  .crowd-column {
+    padding: 12px 12px var(--space-1);
+  }
+
+  .crowd-list li {
+    gap: var(--space-2);
   }
 }

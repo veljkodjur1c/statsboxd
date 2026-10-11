@@ -306,9 +306,11 @@ main {
   gap: var(--space-3);
 }
 
+/* The kicker sits a little apart from the title; a description right under
+   the header stays close to it (see below), so it reads as the title's. */
 .card-heading {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -321,6 +323,10 @@ main {
   margin-top: var(--space-2);
   max-width: 60ch;
   color: var(--color-text-muted);
+}
+
+.card-header + .card-description {
+  margin-top: var(--space-1);
 }
 
 /* A short mono note at the right of a card header, e.g. "253 ratings". */
