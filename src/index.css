@@ -41,12 +41,10 @@
      for large fills on this dark surface (checked with a palette validator:
      lightness band, chroma floor, 6.3:1 on --color-surface). */
   --color-chart: #23a99b;
-  /* The activity calendar: 1, 2 and 3+ films a day, one hue from dark to
-     light ending on the bar colour (validated as an ordinal ramp: monotone
-     lightness, visible steps, the faintest 2.5:1 on --color-surface). */
-  --color-heat-1: #20605a;
-  --color-heat-2: #22867b;
-  --color-heat-3: var(--color-chart);
+  /* A day you logged films on, in the activity calendar: a deep aqua that
+     clears the card (2.5:1 on --color-surface) and keeps white digits and
+     the aqua dots readable on it (7.5:1 and 4.7:1). */
+  --color-day-logged: #20605a;
 
   /* Amber is only ever a rating. */
   --color-star: #f5b544;

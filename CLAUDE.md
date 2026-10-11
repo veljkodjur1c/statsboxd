@@ -165,10 +165,15 @@ The user is learning React and TypeScript. Therefore:
 - Reel 06 Activity (`ActivityCard`, `diaryByDay`, `monthWeeks`,
   `monthSummary`, `diaryMonthRange`): the diary as a month calendar
   (Monday first, UTC dates), one month at a time — the user chose this over
-  a whole-year grid. Days with films are buttons shaded `--color-heat-1/2/3`
-  (1, 2, 3+ films; validated as an ordinal ramp), with "N March: 2 films"
-  labels; picking one lists its films under the calendar (default: the
-  latest active day of the month). Arrows + a month picker (short names, so
+  a whole-year grid. Days with films are buttons filled `--color-day-logged`
+  with a white number and one aqua dot per film (up to 3, "3+"; the user
+  didn't want dark digits on lighter shades), with "N March: 2 films"
+  labels; picking one lists up to 2 of its films under the calendar
+  (default: the latest active day of the month), names on one line, and
+  "Show all N" beside the date opens `FilmListDialog`. The card stretches
+  to the Runtime card's height (`align-self: stretch`, 710px on desktop) and
+  must never be taller: checked for every month incl. a 6-week month with a
+  3-film day (36px days, one-line description). Arrows + a month picker (short names, so
   they fit at 320px) + a year picker (all time only; every year in the
   range, gaps included) move between the first and last diary month; the
   out-of-range months are disabled and picks are clamped. It starts on the
