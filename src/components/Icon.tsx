@@ -75,6 +75,8 @@ const ICONS = {
   ),
   close: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />,
   'chevron-down': <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />,
+  'chevron-left': <path d="M14.5 6.5 9 12l5.5 5.5" />,
+  'chevron-right': <path d="M9.5 6.5 15 12l-5.5 5.5" />,
   alert: (
     <>
       <circle cx="12" cy="12" r="9" />

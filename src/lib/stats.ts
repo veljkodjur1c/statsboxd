@@ -127,14 +127,11 @@ export function latestRatings(data: LetterboxdExport, count: number): DatedFilm[
 }
 
 /**
- * The films you watched most recently, by your diary: one row per diary
- * entry (a rewatch can appear twice), dated by the day you watched it, with
- * the rating the film has now.
+ * Every diary entry as a film dated by the day you watched it, with the
+ * rating the film has now, in the order you logged them. A rewatch is an
+ * entry of its own.
  */
-export function latestDiaryEntries(
-  data: LetterboxdExport,
-  count: number,
-): DatedFilm[] {
+function diaryFilms(data: LetterboxdExport): DatedFilm[] {
   const films = new Map(uniqueFilms(data).map((film) => [film.letterboxdUri, film]))
   const ratingByUri = ratingsByUri(data)
 
@@ -151,9 +148,140 @@ export function latestDiaryEntries(
       })
     }
   }
+  return entries
+}
+
+/**
+ * The films you watched most recently, by your diary: one row per diary
+ * entry (a rewatch can appear twice), dated by the day you watched it, with
+ * the rating the film has now.
+ */
+export function latestDiaryEntries(
+  data: LetterboxdExport,
+  count: number,
+): DatedFilm[] {
   // The diary is in the order you logged it; reversed first, so entries
   // watched on the same day keep the last-logged one on top (sort is stable).
-  return entries.reverse().sort(newestFirst).slice(0, count)
+  return diaryFilms(data).reverse().sort(newestFirst).slice(0, count)
+}
+
+/** "YYYY-MM-DD" → the films you watched that day, in the order you logged them. */
+export type DiaryByDay = Map<string, DatedFilm[]>
+
+/** Your diary grouped by the day you watched each film. */
+export function diaryByDay(data: LetterboxdExport): DiaryByDay {
+  const days: DiaryByDay = new Map()
+  for (const film of diaryFilms(data)) {
+    if (!isIsoDate(film.date)) {
+      continue
+    }
+    const day = days.get(film.date)
+    if (day === undefined) {
+      days.set(film.date, [film])
+    } else {
+      day.push(film)
+    }
+  }
+  return days
+}
+
+/** A calendar month; `month` is 1–12. */
+export type Month = {
+  year: number
+  month: number
+}
+
+/** "2025-03" for March 2025: the start every date in that month shares. */
+export const monthPrefix = ({ year, month }: Month) =>
+  `${year}-${String(month).padStart(2, '0')}`
+
+/** Months counted from year 0, so two months compare as plain numbers. */
+export const monthIndex = ({ year, month }: Month) => year * 12 + (month - 1)
+
+/** The month after (step 1) or before (step −1) this one. */
+export function addMonths(month: Month, step: number): Month {
+  const index = monthIndex(month) + step
+  return { year: Math.floor(index / 12), month: (index % 12) + 1 }
+}
+
+/** The months of the first and the last film in your diary; null if it's empty. */
+export function diaryMonthRange(days: DiaryByDay): { first: Month; last: Month } | null {
+  let first: string | null = null
+  let last: string | null = null
+  for (const date of days.keys()) {
+    if (first === null || date < first) {
+      first = date
+    }
+    if (last === null || date > last) {
+      last = date
+    }
+  }
+  if (first === null || last === null) {
+    return null
+  }
+  const monthOf = (date: string) => ({
+    year: Number(date.slice(0, 4)),
+    month: Number(date.slice(5, 7)),
+  })
+  return { first: monthOf(first), last: monthOf(last) }
+}
+
+/** One square of the month calendar. */
+export type CalendarDay = {
+  date: string // "YYYY-MM-DD"
+  day: number // 1–31
+  films: DatedFilm[] // empty on a day you didn't log anything
+}
+
+/**
+ * The month as calendar weeks, Monday first. Days outside the month are
+ * null, so every week has exactly 7 places.
+ */
+export function monthWeeks(month: Month, days: DiaryByDay): (CalendarDay | null)[][] {
+  // Date.UTC avoids time zones: the same date is the same weekday everywhere.
+  // Day 0 of the next month is the last day of this one.
+  const first = new Date(Date.UTC(month.year, month.month - 1, 1))
+  const length = new Date(Date.UTC(month.year, month.month, 0)).getUTCDate()
+  const offset = (first.getUTCDay() + 6) % 7 // getUTCDay: Sunday 0 … Saturday 6
+
+  const places: (CalendarDay | null)[] = Array.from({ length: offset }, () => null)
+  for (let day = 1; day <= length; day++) {
+    const date = `${monthPrefix(month)}-${String(day).padStart(2, '0')}`
+    places.push({ date, day, films: days.get(date) ?? [] })
+  }
+  while (places.length % 7 !== 0) {
+    places.push(null)
+  }
+
+  const weeks: (CalendarDay | null)[][] = []
+  for (let start = 0; start < places.length; start += 7) {
+    weeks.push(places.slice(start, start + 7))
+  }
+  return weeks
+}
+
+/** A month of the diary in numbers. */
+export type MonthSummary = {
+  films: number // diary entries, so a rewatch counts again
+  activeDays: number // days with at least one film
+  busiestDay: CalendarDay | null // most films; the earliest on a tie
+}
+
+export function monthSummary(weeks: (CalendarDay | null)[][]): MonthSummary {
+  let films = 0
+  let activeDays = 0
+  let busiestDay: CalendarDay | null = null
+  for (const day of weeks.flat()) {
+    if (day === null || day.films.length === 0) {
+      continue
+    }
+    films += day.films.length
+    activeDays++
+    if (busiestDay === null || day.films.length > busiestDay.films.length) {
+      busiestDay = day
+    }
+  }
+  return { films, activeDays, busiestDay }
 }
 
 // A group needs this many rated films to be listed, so that a single 5★ film

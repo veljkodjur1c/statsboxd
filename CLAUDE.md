@@ -147,21 +147,33 @@ The user is learning React and TypeScript. Therefore:
   ticket tiles (films watched, films rated, average rating, watch time),
   notices (failed + Retry, "not found" as `<details>`), "How
   you rate" (2/3) beside "Latest ratings" (1/3) — all in `ExportSummary` —
-  then a hint line, the five stat cards, the crowd card and the wrap card.
+  then a hint line, the five stat cards and the diary calendar, the crowd
+  card and the wrap card.
 - Watch time (`watchTime`): TMDB runtimes, each film once, in hours; films
   without a runtime count as 0. It replaced the "Matched on TMDB" tile — the
   hint line and the notices already say when films weren't matched.
-- Reel 06 "You vs. the crowd" (`CrowdCard`, `crowdComparison`): your rating
+- Reel 07 "You vs. the crowd" (`CrowdCard`, `crowdComparison`): your rating
   against the TMDB average halved to stars, for rated films with at least
   `MIN_CROWD_VOTES` (50) votes. A verdict sentence + your/crowd averages,
   then the 5 films you liked most above and most below the crowd. Hidden
   when no film qualifies.
 - Stat cards in a 2-column `.stats-grid` (one column below ~500px per card):
   Reel 01 Genres and Reel 02 Decades (charts) first, then Reel 03 Actors and
-  Reel 04 Directors (tables), then Reel 05 Runtime (chart). The desktop
-  half beside Runtime is empty for now (planned: the activity card). The
-  Chart/Table switch is in the card header;
+  Reel 04 Directors (tables), then Reel 05 Runtime (chart) beside Reel 06
+  Activity. The Chart/Table switch is in the card header;
   "Show all" is a small secondary button in the footer track.
+- Reel 06 Activity (`ActivityCard`, `diaryByDay`, `monthWeeks`,
+  `monthSummary`, `diaryMonthRange`): the diary as a month calendar
+  (Monday first, UTC dates), one month at a time — the user chose this over
+  a whole-year grid. Days with films are buttons shaded `--color-heat-1/2/3`
+  (1, 2, 3+ films; validated as an ordinal ramp), with "N March: 2 films"
+  labels; picking one lists its films under the calendar (default: the
+  latest active day of the month). Arrows + a month picker (short names, so
+  they fit at 320px) + a year picker (all time only; every year in the
+  range, gaps included) move between the first and last diary month; the
+  out-of-range months are disabled and picks are clamped. It starts on the
+  latest month; `StatsSection` keys it by the diary's years, so the year
+  picker resets it. Hidden with an empty diary.
 - Every table shows 10 rows until "Show all" (`VISIBLE_ROWS` in `StatTable`).
   `.stat-card` is a grid that reserves room for heading, 2-line description,
   header + 10 rows and the button, so collapsed cards are all the same height;
@@ -289,7 +301,7 @@ The user is learning React and TypeScript. Therefore:
 10. v4.0 (branch `v4`):
     1. Image preview before saving ✓
     2. Rating vs. runtime: which film lengths you like most ✓
-    3. Activity over time: heatmap from the diary's `Watched Date`
+    3. Activity over time: a month calendar of the diary ✓
 
 ## Security and robustness (notes)
 

@@ -1,0 +1,184 @@
+/* Reel 06, the diary calendar: month navigation, the month as a grid of
+   days, a key, and the films of the picked day. */
+
+.activity-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.activity-nav .icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.activity-nav .icon-button:disabled:hover {
+  background: transparent;
+}
+
+.activity-pickers {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* A native <select> dressed like the year picker, a little smaller. */
+.activity-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.activity-select select {
+  height: 40px;
+  padding: 0 34px 0 14px;
+  font: 600 15px/1 var(--font-body);
+  color: var(--color-text);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  appearance: none;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.activity-select select:hover {
+  background: var(--color-surface-3);
+}
+
+.activity-select .icon {
+  position: absolute;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.activity-year {
+  font: 600 15px/1 var(--font-body);
+}
+
+/* Seven equal columns; the spacing between cells is the 4px gap. The
+   negative margin lines the outer cells up with the card's content edge. */
+.activity-calendar {
+  width: calc(100% + 8px);
+  margin: var(--space-3) -4px 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+
+.activity-calendar th {
+  padding-bottom: var(--space-1);
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.activity-calendar td {
+  padding: 0;
+}
+
+/* A day: 40px tall (a comfortable tap target), as wide as its column. */
+.activity-cell {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 40px;
+  padding: 0;
+  font: 500 12px/1 var(--font-mono);
+  color: var(--color-text-faint);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+
+/* The shades: one hue from faint to full, never the only clue (the count is
+   in each day's label and in the film list). Dark digits on the two light
+   shades keep the contrast up. */
+button.activity-cell {
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.activity-cell[data-level='1'],
+.activity-key-swatch[data-level='1'] {
+  color: var(--color-text);
+  background: var(--color-heat-1);
+}
+
+.activity-cell[data-level='2'],
+.activity-key-swatch[data-level='2'] {
+  color: var(--color-on-accent);
+  background: var(--color-heat-2);
+}
+
+.activity-cell[data-level='3'],
+.activity-key-swatch[data-level='3'] {
+  color: var(--color-on-accent);
+  background: var(--color-heat-3);
+}
+
+button.activity-cell:hover {
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+/* The picked day: a ring in the text colour, so it can't be mistaken for
+   the aqua focus ring. */
+.activity-cell[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+.activity-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.activity-summary {
+  font: 400 12px/16px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.activity-key {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: 400 11px/16px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.activity-key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-key-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.activity-day {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.activity-day-title {
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}

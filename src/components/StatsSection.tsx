@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import type { EnrichResult } from '../lib/enrich.ts'
 import type { LetterboxdExport } from '../lib/letterboxd.ts'
-import { computeStats, MIN_RATED } from '../lib/stats.ts'
+import { computeStats, diaryYears, MIN_RATED } from '../lib/stats.ts'
+import ActivityCard from './ActivityCard.tsx'
 import ColumnChart from './charts/ColumnChart.tsx'
 import GenreChart from './charts/GenreChart.tsx'
 import Icon from './Icon.tsx'
@@ -15,7 +16,7 @@ type StatsSectionProps = {
 
 /**
  * The stat cards ("reels"): the two charts first, then the two tables, then
- * runtime (a chart again).
+ * runtime (a chart again) beside the diary calendar.
  */
 function StatsSection({ data, tmdb }: StatsSectionProps) {
   // Recompute only when the data changes, not on every re-render.
@@ -95,6 +96,11 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
             />
           )}
         />
+        {/* A `key` that changes makes React throw the old card away and
+            build a new one, with fresh state. The diary's years change
+            with the year picker, so the calendar starts over on the latest
+            month of whatever is shown. */}
+        <ActivityCard key={diaryYears(data).join()} data={data} />
       </div>
     </section>
   )

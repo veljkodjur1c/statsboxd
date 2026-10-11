@@ -21,7 +21,7 @@ function formatDifference(difference: number): string {
   return sign + Math.abs(difference).toFixed(1)
 }
 
-/** Reel 06: your ratings next to the TMDB users' average. */
+/** Reel 07: your ratings next to the TMDB users' average. */
 function CrowdCard({ data, tmdb }: CrowdCardProps) {
   const { films, yourAverage, crowdAverage } = useMemo(
     () => crowdComparison(data, tmdb),
@@ -48,7 +48,7 @@ function CrowdCard({ data, tmdb }: CrowdCardProps) {
     <section className="card crowd-card">
       <div className="card-header">
         <div className="card-heading">
-          <p className="kicker">Reel 06 · The crowd</p>
+          <p className="kicker">Reel 07 · The crowd</p>
           <h2 className="card-title">You vs. the crowd</h2>
         </div>
         <p className="card-meta">

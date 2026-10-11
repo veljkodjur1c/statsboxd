@@ -2,19 +2,27 @@ import { describe, expect, it } from 'vitest'
 import type { EnrichResult } from './enrich.ts'
 import type { Film, LetterboxdExport, RatedFilm } from './letterboxd.ts'
 import {
+  addMonths,
   computeStats,
   countFilms,
   crowdComparison,
+  diaryByDay,
   diaryYears,
   filterByYear,
   latestDiaryEntries,
+  diaryMonthRange,
   latestRatings,
   MIN_CROWD_VOTES,
+  monthIndex,
+  monthPrefix,
+  monthSummary,
+  monthWeeks,
   ratingDistribution,
   shareSummary,
   sortGroups,
   watchTime,
   type GroupStat,
+  type Month,
 } from './stats.ts'
 import type { Person, TmdbFilm } from './tmdb.ts'
 
@@ -198,6 +206,72 @@ describe('latestDiaryEntries', () => {
       ],
     })
     expect(latestDiaryEntries(data, 5).map((f) => f.letterboxdUri)).toEqual(['b', 'a'])
+  })
+})
+
+// --- The diary calendar ------------------------------------------------------
+
+describe('diary calendar', () => {
+  const data = exportOf({
+    ratings: [rated('a', 4)],
+    watched: [film('a'), film('b')],
+    diary: [
+      { letterboxdUri: 'a', watchedDate: '2025-03-05' },
+      { letterboxdUri: 'b', watchedDate: '2025-03-05' },
+      { letterboxdUri: 'a', watchedDate: '2025-03-31' },
+      { letterboxdUri: 'b', watchedDate: '2024-12-24' },
+      { letterboxdUri: 'b', watchedDate: 'not a date' },
+    ],
+  })
+  const days = diaryByDay(data)
+  const march: Month = { year: 2025, month: 3 }
+
+  it('groups the diary by day, with the ratings films have now', () => {
+    expect([...days.keys()]).toEqual(['2025-03-05', '2025-03-31', '2024-12-24'])
+    expect(days.get('2025-03-05')?.map((f) => [f.letterboxdUri, f.rating])).toEqual([
+      ['a', 4],
+      ['b', null],
+    ])
+  })
+
+  it('finds the months of the first and the last film', () => {
+    expect(diaryMonthRange(days)).toEqual({ first: { year: 2024, month: 12 }, last: march })
+    expect(diaryMonthRange(new Map())).toBeNull()
+  })
+
+  it('steps between months across the turn of the year', () => {
+    expect(addMonths({ year: 2025, month: 1 }, -1)).toEqual({ year: 2024, month: 12 })
+    expect(addMonths({ year: 2024, month: 12 }, 1)).toEqual({ year: 2025, month: 1 })
+    expect(monthIndex({ year: 2025, month: 1 }) - monthIndex({ year: 2024, month: 12 })).toBe(1)
+    expect(monthPrefix(march)).toBe('2025-03')
+  })
+
+  it('lays a month out in weeks from Monday', () => {
+    // 1 March 2025 was a Saturday; March has 31 days and ends on a Monday.
+    const weeks = monthWeeks(march, days)
+    expect(weeks).toHaveLength(6)
+    expect(weeks.every((week) => week.length === 7)).toBe(true)
+    expect(weeks[0].slice(0, 5)).toEqual([null, null, null, null, null])
+    expect(weeks[0][5]?.date).toBe('2025-03-01')
+    expect(weeks[5][0]?.date).toBe('2025-03-31')
+    expect(weeks[5].slice(1)).toEqual([null, null, null, null, null, null])
+  })
+
+  it('knows how long February is in a leap year', () => {
+    const days = monthWeeks({ year: 2024, month: 2 }, new Map()).flat()
+    expect(days.filter((day) => day !== null)).toHaveLength(29)
+  })
+
+  it('sums up a month', () => {
+    const summary = monthSummary(monthWeeks(march, days))
+    expect(summary.films).toBe(3)
+    expect(summary.activeDays).toBe(2)
+    expect(summary.busiestDay?.date).toBe('2025-03-05')
+    expect(monthSummary(monthWeeks({ year: 2025, month: 4 }, days))).toEqual({
+      films: 0,
+      activeDays: 0,
+      busiestDay: null,
+    })
   })
 })
 
