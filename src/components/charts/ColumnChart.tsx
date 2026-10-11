@@ -21,17 +21,20 @@ import {
   MAX_BAR_SIZE,
 } from './chartTheme.ts'
 
-type DecadeChartProps = {
-  rows: GroupStat[] // in chronological order
+type ColumnChartProps = {
+  rows: GroupStat[] // in their natural order: decades, runtimes…
   average: number | null
   onSelect: (group: GroupStat) => void
+  // Optional shorter text for the axis, e.g. "90–119" for "90–119 min".
+  formatTick?: (label: string) => string
 }
 
 /**
- * Columns: your average rating per decade. The number of films is in the
- * tooltip rather than on a second axis — two scales on one chart mislead.
+ * Columns: your average rating per group, for groups that have an order
+ * (decades, runtimes). The number of films is in the tooltip rather than on
+ * a second axis — two scales on one chart mislead.
  */
-function DecadeChart({ rows, average, onSelect }: DecadeChartProps) {
+function ColumnChart({ rows, average, onSelect, formatTick }: ColumnChartProps) {
   return (
     <>
       {average !== null && <AverageKey average={average} />}
@@ -46,6 +49,11 @@ function DecadeChart({ rows, average, onSelect }: DecadeChartProps) {
             <XAxis
               dataKey="label"
               tick={AXIS_TICK}
+              tickFormatter={formatTick}
+              // When the labels don't all fit (narrow phones), show every
+              // second (or third…) one, evenly, instead of dropping some at
+              // random.
+              interval="equidistantPreserveStart"
               axisLine={{ stroke: GRID_STROKE }}
               tickLine={false}
             />
@@ -93,4 +101,4 @@ function DecadeChart({ rows, average, onSelect }: DecadeChartProps) {
   )
 }
 
-export default DecadeChart
+export default ColumnChart

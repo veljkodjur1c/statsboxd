@@ -25,6 +25,7 @@ export type Stats = {
   actors: GroupStat[]
   directors: GroupStat[]
   decades: GroupStat[]
+  runtimes: GroupStat[] // shortest first
   averageRating: number | null // over all your ratings; null if none
   matchedFilms: number // films found on TMDB
   totalFilms: number
@@ -282,6 +283,24 @@ function decadeOf(year: number): Group {
   return { key: String(start), label: `${start}s` }
 }
 
+// Runtime groups start at these minutes: under 90, 90–119, 120–149, 150–179
+// and 180+. Half-hour steps are easy to picture.
+const RUNTIME_STEPS = [90, 120, 150, 180]
+
+function runtimeGroupOf(minutes: number): Group {
+  const start = RUNTIME_STEPS.findLast((step) => minutes >= step)
+  if (start === undefined) {
+    // "<" sorts before digits, so sorting the labels by name keeps the
+    // groups shortest first, like the decades.
+    return { key: '0', label: `< ${RUNTIME_STEPS[0]} min` }
+  }
+  const next = RUNTIME_STEPS.find((step) => step > start)
+  return {
+    key: String(start),
+    label: next === undefined ? `${start}+ min` : `${start}–${next - 1} min`,
+  }
+}
+
 const atLeast = (groups: GroupStat[], minRated: number) =>
   groups.filter((group) => group.rated >= minRated)
 
@@ -310,6 +329,11 @@ export function computeStats(
   const decades = aggregate(entries, (entry) =>
     entry.film.year === null ? [] : [decadeOf(entry.film.year)],
   )
+  // Runtimes come from TMDB as well; an unknown runtime (null) is left out.
+  const runtimes = aggregate(entries, (entry) => {
+    const runtime = entry.tmdb?.runtime ?? null
+    return runtime === null ? [] : [runtimeGroupOf(runtime)]
+  })
 
   return {
     genres: sortGroups(atLeast(genres, MIN_RATED.genres), 'average', 'desc'),
@@ -320,6 +344,7 @@ export function computeStats(
       'desc',
     ),
     decades: sortGroups(decades, 'name', 'asc'),
+    runtimes: sortGroups(runtimes, 'name', 'asc'),
     averageRating: mean(data.ratings.map((film) => film.rating)),
     matchedFilms: entries.filter((entry) => entry.tmdb !== null).length,
     totalFilms: entries.length,

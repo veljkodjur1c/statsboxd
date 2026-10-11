@@ -241,6 +241,55 @@ describe('computeStats', () => {
     expect(computeStats(data, enriched({})).decades).toEqual([])
   })
 
+  it('groups films by runtime in half-hour steps, shortest first', () => {
+    const minutes = { a: 89, b: 90, c: 119, d: 120, e: 179, f: 180, g: 240 }
+    const data = exportOf({
+      ratings: Object.keys(minutes).map((id, i) => rated(id, (i % 5) + 1)),
+    })
+    const tmdb = enriched(
+      Object.fromEntries(
+        Object.entries(minutes).map(([id, runtime]) => [id, tmdbWith({ runtime })]),
+      ),
+    )
+    const { runtimes } = computeStats(data, tmdb)
+
+    expect(labels(runtimes)).toEqual([
+      '< 90 min',
+      '90–119 min',
+      '120–149 min',
+      '150–179 min',
+      '180+ min',
+    ])
+    expect(runtimes.map((group) => group.films)).toEqual([1, 2, 1, 1, 2])
+    // a 1★; b 2★ and c 3★; d 4★; e 5★; f 1★ and g 2★
+    expect(runtimes.map((group) => group.average)).toEqual([1, 2.5, 4, 5, 1.5])
+  })
+
+  it('leaves films with an unknown runtime out of the runtimes', () => {
+    const data = exportOf({ ratings: [rated('a', 4), rated('b', 3), rated('c', 2)] })
+    const tmdb = enriched({ a: tmdbWith({ runtime: 100 }), b: tmdbWith({ runtime: null }) })
+    const { runtimes } = computeStats(data, tmdb)
+
+    expect(runtimes).toHaveLength(1)
+    expect(runtimes[0]).toMatchObject({ label: '90–119 min', films: 1, average: 4 })
+  })
+
+  it('keeps the runtimes in order when sorted by name', () => {
+    const data = exportOf({ ratings: [rated('a', 3), rated('b', 3), rated('c', 3)] })
+    const tmdb = enriched({
+      a: tmdbWith({ runtime: 200 }),
+      b: tmdbWith({ runtime: 60 }),
+      c: tmdbWith({ runtime: 130 }),
+    })
+    const { runtimes } = computeStats(data, tmdb)
+
+    expect(labels(sortGroups(runtimes, 'name', 'desc'))).toEqual([
+      '180+ min',
+      '120–149 min',
+      '< 90 min',
+    ])
+  })
+
   it('lists actors only with at least 3 rated films', () => {
     const data = exportOf({ ratings: [rated('a', 5), rated('b', 4), rated('c', 3)] })
     const stats = computeStats(
@@ -377,6 +426,7 @@ describe('an export with nothing in it', () => {
       actors: [],
       directors: [],
       decades: [],
+      runtimes: [],
       averageRating: null,
       matchedFilms: 0,
       totalFilms: 0,

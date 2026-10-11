@@ -147,18 +147,20 @@ The user is learning React and TypeScript. Therefore:
   ticket tiles (films watched, films rated, average rating, watch time),
   notices (failed + Retry, "not found" as `<details>`), "How
   you rate" (2/3) beside "Latest ratings" (1/3) — all in `ExportSummary` —
-  then a hint line, the four stat cards, the crowd card and the wrap card.
+  then a hint line, the five stat cards, the crowd card and the wrap card.
 - Watch time (`watchTime`): TMDB runtimes, each film once, in hours; films
   without a runtime count as 0. It replaced the "Matched on TMDB" tile — the
   hint line and the notices already say when films weren't matched.
-- Reel 05 "You vs. the crowd" (`CrowdCard`, `crowdComparison`): your rating
+- Reel 06 "You vs. the crowd" (`CrowdCard`, `crowdComparison`): your rating
   against the TMDB average halved to stars, for rated films with at least
   `MIN_CROWD_VOTES` (50) votes. A verdict sentence + your/crowd averages,
   then the 5 films you liked most above and most below the crowd. Hidden
   when no film qualifies.
 - Stat cards in a 2-column `.stats-grid` (one column below ~500px per card):
   Reel 01 Genres and Reel 02 Decades (charts) first, then Reel 03 Actors and
-  Reel 04 Directors (tables). The Chart/Table switch is in the card header;
+  Reel 04 Directors (tables), then Reel 05 Runtime (chart). The desktop
+  half beside Runtime is empty for now (planned: the activity card). The
+  Chart/Table switch is in the card header;
   "Show all" is a small secondary button in the footer track.
 - Every table shows 10 rows until "Show all" (`VISIBLE_ROWS` in `StatTable`).
   `.stat-card` is a grid that reserves room for heading, 2-line description,
@@ -199,8 +201,13 @@ The user is learning React and TypeScript. Therefore:
   ratings (unrated films don't affect it).
 - Genres / actors (all 15 stored cast members) / directors only use films
   matched on TMDB; people are keyed by TMDB id. Decades use the Letterboxd year.
+- Runtimes (`runtimes`, Reel 05): TMDB runtime in half-hour groups
+  (`RUNTIME_STEPS`): "< 90 min", "90–119 min", "120–149 min", "150–179 min",
+  "180+ min"; unknown runtimes are left out. The "<" sorts before digits, so
+  sorting by name keeps them shortest first (tested). All groups are listed.
 - Minimum rated films to be listed (`MIN_RATED`): genres 1, actors 3,
-  directors 2. Default sort: average ↓, then rated ↓, then name; decades by name.
+  directors 2. Default sort: average ↓, then rated ↓, then name; decades and
+  runtimes by name.
 - Sorting (`sortGroups`): clicking a column header sorts by it (names A→Z,
   numbers high→low first); clicking it again flips the direction. Ties use
   average ↓, rated ↓, name; groups without an average always go last.
@@ -220,10 +227,13 @@ The user is learning React and TypeScript. Therefore:
   Recharts 3 draws tick labels in a separate layer
   (`.recharts-yAxis-tick-labels`), not inside `.yAxis`.
 - Rating distribution (½★–5★ histogram) is the "How you rate" card; it
-  stretches to the height of "Latest ratings" beside it. Genre (horizontal bars) and decade (columns) charts are the default view of
-  their stat cards, with a Chart/Table switch (`renderChart` render prop on
+  stretches to the height of "Latest ratings" beside it. Genre (horizontal bars), decade and runtime
+  (columns, `ColumnChart`) charts are the default view of their stat cards, with a Chart/Table switch (`renderChart` render prop on
   `StatTable`). The chart area has the same height as the table area, so
   cards stay equal. Clicking a bar opens the same `FilmListDialog`.
+  When the column labels don't all fit (phones), `ColumnChart` shows every
+  second one evenly (`interval="equidistantPreserveStart"`); the runtime
+  axis drops " min" (`formatTick`), the description says "in minutes".
 - Rules (from the dataviz guidelines): one y-scale per chart, never two —
   extra numbers go in the tooltip or table; one series = one color, no legend
   box; bars `--color-chart` (#23a99b — a deeper step of the aqua; the accent
@@ -278,7 +288,7 @@ The user is learning React and TypeScript. Therefore:
    (tag `v3.1`).
 10. v4.0 (branch `v4`):
     1. Image preview before saving ✓
-    2. Rating vs. runtime: which film lengths you like most
+    2. Rating vs. runtime: which film lengths you like most ✓
     3. Activity over time: heatmap from the diary's `Watched Date`
 
 ## Security and robustness (notes)

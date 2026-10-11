@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { EnrichResult } from '../lib/enrich.ts'
 import type { LetterboxdExport } from '../lib/letterboxd.ts'
 import { computeStats, MIN_RATED } from '../lib/stats.ts'
-import DecadeChart from './charts/DecadeChart.tsx'
+import ColumnChart from './charts/ColumnChart.tsx'
 import GenreChart from './charts/GenreChart.tsx'
 import Icon from './Icon.tsx'
 import StatTable from './StatTable.tsx'
@@ -13,7 +13,10 @@ type StatsSectionProps = {
   tmdb: EnrichResult
 }
 
-/** The four stat cards ("reels"): the two charts first, then the two tables. */
+/**
+ * The stat cards ("reels"): the two charts first, then the two tables, then
+ * runtime (a chart again).
+ */
 function StatsSection({ data, tmdb }: StatsSectionProps) {
   // Recompute only when the data changes, not on every re-render.
   const stats = useMemo(() => computeStats(data, tmdb), [data, tmdb])
@@ -25,7 +28,7 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
         <span>
           Click any name or bar to see the films behind it.
           {stats.matchedFilms < stats.totalFilms &&
-            ` Genre, actor and director stats are based on the ${stats.matchedFilms} of ${stats.totalFilms} films found on TMDB.`}
+            ` Genre, actor, director and runtime stats are based on the ${stats.matchedFilms} of ${stats.totalFilms} films found on TMDB.`}
         </span>
       </p>
 
@@ -53,7 +56,7 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
           rows={stats.decades}
           defaultSort="name"
           renderChart={(onSelect) => (
-            <DecadeChart
+            <ColumnChart
               rows={stats.decades}
               average={stats.averageRating}
               onSelect={onSelect}
@@ -75,6 +78,22 @@ function StatsSection({ data, tmdb }: StatsSectionProps) {
           nameLabel="Director"
           rows={stats.directors}
           defaultSort="average"
+        />
+        <StatTable
+          kicker="Reel 05 · Runtime"
+          title="Ratings by runtime"
+          description="Films grouped by length, in minutes. Do long films win you over?"
+          nameLabel="Runtime"
+          rows={stats.runtimes}
+          defaultSort="name"
+          renderChart={(onSelect) => (
+            <ColumnChart
+              rows={stats.runtimes}
+              average={stats.averageRating}
+              onSelect={onSelect}
+              formatTick={(label) => label.replace(' min', '')}
+            />
+          )}
         />
       </div>
     </section>
